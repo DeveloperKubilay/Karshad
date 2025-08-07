@@ -1,7 +1,6 @@
 {
-  "name": "loadbalancer",
+  "name": "module",
   "version": "1.0.0",
-  "description": "\"# Karshad\"",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,7 +8,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "description": "",
   "dependencies": {
-    "fastify": "^5.4.0"
+    "fastify-plugin": "^5.0.1",
+    "systeminformation": "^5.27.7"
   }
 }
