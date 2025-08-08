@@ -3,17 +3,25 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
-const AzureSystem = {
-    subscriptionId: null,
-    tenantId: null,
-    clientId: null,
-    clientSecret: null,
-    location: null,
-    resourceGroupName: null,
-    deploymentName: null,
-    publicIp: null,
-    token: null,
-    runScriptPath: null,
+class AzureSystem {
+    constructor() {
+        this.subscriptionId = null;
+        this.tenantId = null;
+        this.clientId = null;
+        this.clientSecret = null;
+        this.location = null;
+        this.resourceGroupName = null;
+        this.deploymentName = null;
+        this.publicIp = null;
+        this.token = null;
+        this.runScriptPath = null;
+    }
+
+    static async create(config) {
+        const instance = new AzureSystem();
+        const result = await instance.createInstance(config);
+        return result;
+    }
 
     init(config) {
         const prefix = config.envPrefix;
@@ -23,7 +31,7 @@ const AzureSystem = {
         this.clientSecret = process.env[`${prefix}CLIENT_SECRET`];
         this.location = process.env[`${prefix}LOCATION`] || 'francecentral';
         this.runScriptPath = config.run;
-    },
+    }
 
     async getAccessToken() {
         const tokenUrl = `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`;
@@ -37,18 +45,18 @@ const AzureSystem = {
         const response = await axios.post(tokenUrl, tokenData);
         this.token = response.data.access_token;
         return this.token;
-    },
+    }
 
     generateResourceGroupName() {
         const groupId = Math.random().toString(36).substring(2, 8).toUpperCase();
         this.resourceGroupName = `Karshad-${groupId}`;
         return this.resourceGroupName;
-    },
+    }
 
     getTemplate() {
         const templatePath = path.join(__dirname, 'machine', 'template.json');
         return JSON.parse(fs.readFileSync(templatePath, 'utf8'));
-    },
+    }
 
     getParameters() {
         const parametersPath = path.join(__dirname, 'machine', 'parameters.json');
@@ -60,7 +68,7 @@ const AzureSystem = {
             adminUsername: { value: process.env.machineName },
             adminPassword: { value: process.env.machinePass }
         };
-    },
+    }
 
     getCloudInitScript() {
         const runScriptPath = path.join(__dirname, this.runScriptPath);
@@ -75,7 +83,7 @@ write_files:
     content: |
 ${runScript.split('\n').map(line => '      ' + line).join('\n')}
     permissions: '0755'`;
-    },
+    }
 
     async createResourceGroup() {
         const url = `https://management.azure.com/subscriptions/${this.subscriptionId}/resourcegroups/${this.resourceGroupName}?api-version=2021-04-01`;
@@ -85,7 +93,7 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
         }, {
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
-    },
+    }
 
     async deployResources() {
         const template = this.getTemplate();
@@ -112,7 +120,7 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
         });
 
         return response.data;
-    },
+    }
 
     async getPublicIP() {
         const url = `https://management.azure.com/subscriptions/${this.subscriptionId}/resourceGroups/${this.resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/Karshad-ip?api-version=2021-04-01`;
@@ -127,7 +135,7 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
         } catch (error) {
             return null;
         }
-    },
+    }
 
     async waitForDeployment() {
         let attempts = 0;
@@ -149,7 +157,7 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
         }
 
         throw new Error('Deployment timeout');
-    },
+    }
 
     async delete(resourceGroupName = this.resourceGroupName) {
         if (!this.token) {
@@ -166,7 +174,7 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
 
-    },
+    }
 
     async createInstance(config) {
         try {
@@ -189,6 +197,6 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
             throw error;
         }
     }
-};
+}
 
 module.exports = AzureSystem;

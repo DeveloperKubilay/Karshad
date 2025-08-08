@@ -24,7 +24,7 @@ async function waitForMachine(url) {
 
 async function test() {
     const date = Date.now();
-    const machine = await Azure.createInstance(config.Machines[0]);
+    const machine = await Azure.create(config.Machines[0]);
     console.log('🌐 URL:', machine.url);
 
     const machineCreationTime = Date.now() - date;
@@ -39,9 +39,9 @@ async function test() {
     }
 
     // 5 dakika sonra sil
-    setTimeout(() => {
+    /*setTimeout(() => {
         machine.delete();
-    }, 2 * 60 * 1000);
+    }, 2 * 60 * 1000);*/
 }
 
 test();
