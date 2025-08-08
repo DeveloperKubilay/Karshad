@@ -1,6 +1,10 @@
 const fastify = require('fastify')()
+require('dotenv').config();
 
-fastify.register(require('../module'),{test:true});
+fastify.register(require('../module'),{
+    url:process.env.WS_URL,
+    token:process.env.WS_TOKEN
+});
 
 fastify.get('/', async (request, reply) => {
     return { hello: 'world' };

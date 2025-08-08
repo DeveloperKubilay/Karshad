@@ -1,10 +1,10 @@
 
 
 function plugin(wss, options) {
-
     const servers = []
 
     wss.on('connection', async (ws, req) => {
+        console.log('WebSocket bağlantısı kuruldu.');
         if (!req.url) {
             ws.close(4000, 'No URL');
             return;
