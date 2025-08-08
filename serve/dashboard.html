@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karshad Load Balancer Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-card: #161616;
+            --accent-primary: #00d9ff;
+            --accent-secondary: #7c3aed;
+            --accent-danger: #ef4444;
+            --accent-success: #22c55e;
+            --accent-warning: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-tertiary: #71717a;
+            --border-primary: #27272a;
+            --border-secondary: #3f3f46;
+            --glow-primary: rgba(0, 217, 255, 0.3);
+            --glow-secondary: rgba(124, 58, 237, 0.3);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 25% 25%, var(--accent-secondary) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, var(--accent-primary) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            opacity: 0.95;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
+            border-radius: 24px;
+            border: 1px solid var(--border-primary);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary));
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px var(--glow-primary);
+            letter-spacing: -0.02em;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            margin-right: 12px;
+            box-shadow: 0 0 20px var(--accent-success);
+            animation: pulse 2s infinite;
+            position: relative;
+        }
+        
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            opacity: 0.3;
+            animation: ping 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        @keyframes ping {
+            75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid var(--border-primary);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0.6;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 32px 64px rgba(0, 0, 0, 0.4),
+                0 0 0 1px var(--border-secondary),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        .card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-rows: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border-primary);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-item:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-secondary);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 420px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+        
+        .server-list {
+            display: grid;
+            gap: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        
+        .server-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .server-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+        
+        .server-list::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
+        }
+        
+        .server-item {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-primary);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .server-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-success), var(--accent-primary));
+            border-radius: 0 2px 2px 0;
+        }
+        
+        .server-item:hover {
+            transform: translateX(4px);
+            border-color: var(--border-secondary);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .server-ip {
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .server-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+            position: relative;
+        }
+        
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .cpu-bar .progress-fill {
+            background: linear-gradient(90deg, var(--accent-success) 0%, var(--accent-warning) 60%, var(--accent-danger) 100%);
+            box-shadow: 0 0 10px var(--glow-primary);
+        }
+        
+        .mem-bar .progress-fill {
+            background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            box-shadow: 0 0 10px var(--glow-secondary);
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .connected {
+            background: linear-gradient(135deg, var(--accent-success), #16a34a);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-success);
+        }
+        
+        .disconnected {
+            background: linear-gradient(135deg, var(--accent-danger), #dc2626);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-danger);
+            animation: pulse 1s infinite;
+        }
+        
+        .reconnecting {
+            background: linear-gradient(135deg, var(--accent-warning), #d97706);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-warning);
+        }
+        
+        .footer-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+        
+        .footer-stats .card {
+            padding: 24px;
+        }
+        
+        @media (max-width: 1400px) {
+            .dashboard {
+                grid-template-columns: 300px 1fr 300px;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            
+            .header h1 {
+                font-size: 2.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .header {
+                padding: 24px 16px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Bağlanıyor...</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1><span class="status-indicator"></span>Karshad Load Balancer Dashboard</h1>
+            <p>Gerçek zamanlı sunucu izleme sistemi</p>
+        </div>
+        
+        <div class="dashboard">
+            <!-- Sol panel - Sistem istatistikleri -->
+            <div class="card">
+                <h3>⚡ Sistem Özeti</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="serverCount">0</span>
+                        <span class="stat-label">🖥️ Aktif Sunucu</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="avgCpu">0%</span>
+                        <span class="stat-label">⚙️ Ortalama CPU</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="avgMem">0%</span>
+                        <span class="stat-label">💾 Ortalama RAM</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalRequests">0</span>
+                        <span class="stat-label">📊 Toplam İstek</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="dataReceived">0 B</span>
+                        <span class="stat-label">📥 Alınan Veri</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="dataSent">0 B</span>
+                        <span class="stat-label">📤 Gönderilen Veri</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orta panel - Grafik -->
+            <div class="card">
+                <div class="chart-title">📈 Performans Analizi</div>
+                <div class="chart-container">
+                    <canvas id="requestChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Sağ panel - Sunucu listesi -->
+            <div class="card">
+                <h3>🌐 Sunucu Durumları</h3>
+                <div class="server-list" id="serverList">
+                    <!-- Sunucular buraya dinamik olarak eklenecek -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alt panel - Ek istatistikler -->
+        <div class="footer-stats">
+            <div class="card">
+                <div class="stat-item">
+                    <span class="stat-label">📊 CPU Trend Analizi</span>
+                    <canvas id="cpuMiniChart" width="200" height="80"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="stat-item">
+                    <span class="stat-label">💾 RAM Kullanım Trendi</span>
+                    <canvas id="memMiniChart" width="200" height="80"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="stat-item">
+                    <span class="stat-value" id="systemUptime">⏱️ Sistem Çalışma Süresi</span>
+                    <span class="stat-label" id="uptimeValue">Hesaplanıyor...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket bağlantı yönetimi
+        let ws = null;
+        let reconnectInterval = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 50;
+        const baseReconnectDelay = 1000; // 1 saniye
+        
+        // Grafik verileri
+        let requestData = [];
+        let cpuData = [];
+        let memData = [];
+        let timeLabels = [];
+        
+        // WebSocket bağlantısı kurma fonksiyonu
+        connectWebSocket()
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket(`ws://localhost:5000?token=${encodeURIComponent('your_token')}&dashboard=true`);
+                
+                ws.onopen = function() {
+                    console.log('WebSocket bağlantısı kuruldu');
+                    updateConnectionStatus('connected');
+                    reconnectAttempts = 0;
+                    
+                    // Otomatik yeniden bağlanma interval'ini temizle
+                    if (reconnectInterval) {
+                        clearInterval(reconnectInterval);
+                        reconnectInterval = null;
+                    }
+                };
+
+                ws.onclose = function(event) {
+                    console.log('WebSocket bağlantısı kapandı:', event.code, event.reason);
+                    updateConnectionStatus('disconnected');
+                    
+                    // Otomatik yeniden bağlanma başlat
+                    if (!reconnectInterval && reconnectAttempts < maxReconnectAttempts) {
+                        startReconnection();
+                    }
+                };
+
+                ws.onerror = function(error) {
+                    console.error('WebSocket hatası:', error);
+                    updateConnectionStatus('disconnected');
+                };
+
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('Gelen veri:', data);
+                        
+                        // Dashboard verisini doğrudan kullan
+                        updateDashboard(data);
+                    } catch (e) {
+                        console.error('WebSocket mesaj hatası:', e);
+                    }
+                };
+                
+            } catch (error) {
+                console.error('WebSocket bağlantı hatası:', error);
+                updateConnectionStatus('disconnected');
+                startReconnection();
+            }
+        }
+        
+        // Otomatik yeniden bağlanma fonksiyonu
+        function startReconnection() {
+            updateConnectionStatus('reconnecting');
+            
+            reconnectInterval = setInterval(() => {
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    console.log(`Yeniden bağlanma denemesi ${reconnectAttempts}/${maxReconnectAttempts}`);
+                    
+                    // Exponential backoff ile bekleme süresi
+                    const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts - 1), 30000);
+                    
+                    setTimeout(() => {
+                        if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+                            connectWebSocket();
+                        }
+                    }, delay);
+                    
+                } else {
+                    console.log('Maksimum yeniden bağlanma denemesi aşıldı');
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                    updateConnectionStatus('disconnected');
+                }
+            }, 100);
+        }
+        
+        // Bağlantı durumu güncelleme
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            const statusIndicator = document.querySelector('.status-indicator');
+            
+            switch (status) {
+                case 'connected':
+                    statusElement.textContent = 'Bağlandı';
+                    statusElement.className = 'connection-status connected';
+                    statusIndicator.style.background = 'var(--accent-success)';
+                    statusIndicator.style.boxShadow = '0 0 20px var(--accent-success)';
+                    break;
+                case 'disconnected':
+                    statusElement.textContent = 'Bağlantı Kesildi';
+                    statusElement.className = 'connection-status disconnected';
+                    statusIndicator.style.background = 'var(--accent-danger)';
+                    statusIndicator.style.boxShadow = '0 0 20px var(--accent-danger)';
+                    break;
+                case 'reconnecting':
+                    statusElement.textContent = `Yeniden Bağlanıyor... (${reconnectAttempts}/${maxReconnectAttempts})`;
+                    statusElement.className = 'connection-status reconnecting';
+                    statusIndicator.style.background = 'var(--accent-warning)';
+                    statusIndicator.style.boxShadow = '0 0 20px var(--accent-warning)';
+                    break;
+            }
+        }
+        
+        // Manuel yeniden bağlanma (sayfa tıklaması ile)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('disconnected') || e.target.classList.contains('reconnecting')) {
+                reconnectAttempts = 0;
+                connectWebSocket();
+            }
+        });
+        
+        // Ana grafik
+        const ctx = document.getElementById('requestChart').getContext('2d');
+        const requestChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'İstek Sayısı',
+                    data: requestData,
+                    borderColor: '#00d9ff',
+                    backgroundColor: 'rgba(0, 217, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#00d9ff',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1,
+                    pointRadius: 2,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0 // Animasyonu kapat
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                family: 'Inter',
+                                size: 12,
+                                weight: '500'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'line'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(22, 22, 22, 0.95)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#a1a1aa',
+                        borderColor: '#3f3f46',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        titleFont: {
+                            family: 'Inter',
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            family: 'Inter'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#a1a1aa',
+                            font: {
+                                family: 'Inter',
+                                size: 10
+                            },
+                            maxTicksLimit: 10 // X ekseni etiket sayısını sınırla
+                        },
+                        grid: {
+                            color: 'rgba(63, 63, 70, 0.2)',
+                            drawBorder: false,
+                            lineWidth: 1
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#a1a1aa',
+                            font: {
+                                family: 'Inter',
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(63, 63, 70, 0.2)',
+                            drawBorder: false,
+                            lineWidth: 1
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    line: {
+                        tension: 0.3
+                    },
+                    point: {
+                        hoverRadius: 4,
+                        hitRadius: 4
+                    }
+                }
+            }
+        });
+        
+        // Mini CPU grafiği
+        const cpuCtx = document.getElementById('cpuMiniChart').getContext('2d');
+        const cpuChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    data: cpuData,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                    borderWidth: 1.5,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: false,
+                animation: { duration: 0 },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { display: false, min: 0, max: 100 }
+                },
+                elements: {
+                    line: { tension: 0.3 }
+                }
+            }
+        });
+        
+        // Mini RAM grafiği
+        const memCtx = document.getElementById('memMiniChart').getContext('2d');
+        const memChart = new Chart(memCtx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    data: memData,
+                    borderColor: '#7c3aed',
+                    backgroundColor: 'rgba(124, 58, 237, 0.15)',
+                    borderWidth: 1.5,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: false,
+                animation: { duration: 0 },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { display: false, min: 0, max: 100 }
+                },
+                elements: {
+                    line: { tension: 0.3 }
+                }
+            }
+        });
+
+        // Dashboard güncelleme fonksiyonu
+        function updateDashboard(data) {
+            console.log('Dashboard güncelleniyor:', data);
+            
+            // Ana istatistikler
+            document.getElementById('serverCount').textContent = data.serverCount || 0;
+            document.getElementById('avgCpu').textContent = (data.avgCpu || 0) + '%';
+            document.getElementById('avgMem').textContent = (data.avgMem || 0) + '%';
+            document.getElementById('totalRequests').textContent = formatNumber(data.totalRequests || 0);
+            document.getElementById('dataReceived').textContent = (data.dataReceived || 0) + ' KB';
+            document.getElementById('dataSent').textContent = (data.dataSent || 0) + ' KB';
+            
+            // Zaman etiketi
+            const now = new Date().toLocaleTimeString('tr-TR', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            timeLabels.push(now);
+            
+            // Grafik verilerini güncelle
+            requestData.push(data.totalRequests || 0);
+            cpuData.push(parseFloat(data.avgCpu) || 0);
+            memData.push(parseFloat(data.avgMem) || 0);
+            
+            // Performans için maksimum 200 veri noktası tut
+            const maxDataPoints = 200;
+            if (timeLabels.length > maxDataPoints) {
+                timeLabels.shift();
+                requestData.shift();
+                cpuData.shift();
+                memData.shift();
+            }
+            
+            // Grafikleri optimize edilmiş şekilde güncelle
+            requestChart.update('none');
+            cpuChart.update('none');
+            memChart.update('none');
+            
+            // Sunucu listesini güncelle
+            updateServerList(data.servers || []);
+        }
+        
+        // Sayı formatlama fonksiyonu
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // Byte formatlama fonksiyonu
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function updateServerList(servers) {
+            console.log('Sunucu listesi güncelleniyor:', servers);
+            const serverList = document.getElementById('serverList');
+            serverList.innerHTML = '';
+            
+            if (!servers || servers.length === 0) {
+                serverList.innerHTML = '<div class="server-item">Sunucu bulunamadı</div>';
+                return;
+            }
+            
+            servers.forEach(server => {
+                const serverDiv = document.createElement('div');
+                serverDiv.className = 'server-item';
+                
+                const cpuPercent = Math.min(100, Math.max(0, server.cpu || 0));
+                const memPercent = Math.min(100, Math.max(0, server.mem || 0));
+                
+                serverDiv.innerHTML = `
+                    <div class="server-ip">${server.ip || 'Bilinmeyen IP'}</div>
+                    <div class="server-stats">
+                        <div>
+                            <div>CPU: ${cpuPercent.toFixed(1)}%</div>
+                            <div class="progress-bar cpu-bar">
+                                <div class="progress-fill" style="width: ${cpuPercent}%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div>RAM: ${memPercent.toFixed(1)}%</div>
+                            <div class="progress-bar mem-bar">
+                                <div class="progress-fill" style="width: ${memPercent}%"></div>
+                            </div>
+                        </div>
+                        <div>İstek: ${formatNumber(server.reqCount || 0)}</div>
+                        <div>Alınan: ${formatBytes((server.reqBytes || 0) / 1024)}</div>
+                    </div>
+                `;
+                
+                serverList.appendChild(serverDiv);
+            });
+        }
+
+        // Sayfa kapatılırken WebSocket'i temizle
+        window.addEventListener('beforeunload', function() {
+            if (ws) {
+                ws.close();
+            }
+            if (reconnectInterval) {
+                clearInterval(reconnectInterval);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -15,7 +15,7 @@ function plugin(fastify, opts, done) {
         });
 
         ws.on('message', (data) => {
-            console.log('Sunucudan gelen mesaj:', data);
+            console.log(data.toString());
         });
 
         ws.on('close', (code, reason) => {

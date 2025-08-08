@@ -9,6 +9,7 @@ let allowedIpaddrsRef;
 
 setInterval(() => {
     let dontCloseVm = false;
+    if(!statusRef) return;
     Object.entries(statusRef).map(([ip, server]) => {
         const lastStatus = server.status[server.status.length - 1];
         if (lastStatus < config.CpuReleaseUsage.min) dontCloseVm = true;
@@ -23,6 +24,8 @@ setInterval(() => {
 
 
 async function createVm(status, allowedIpaddrs) {
+    console.log("DEBUG")
+
     statusRef = status || {};
     allowedIpaddrsRef = allowedIpaddrs || [];
 
