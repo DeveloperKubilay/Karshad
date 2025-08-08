@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "francecentral"
+        },
+        "virtualMachineName": {
+            "value": "Karshad"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_B2pts_v2"
+        },
+        "adminUsername": {
+            "value": "placeholder"
+        },
+        "adminPassword": {
+            "value": "placeholder"
+        },
+        "virtualNetworkName": {
+            "value": "Karshad-vnet"
+        },
+        "networkSecurityGroupName": {
+            "value": "Karshad-nsg"
+        },
+        "publicIpAddressName": {
+            "value": "Karshad-ip"
+        },
+        "networkInterfaceName": {
+            "value": "karshad391"
+        }
+    }
+}

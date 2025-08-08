@@ -1,0 +1,243 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string"
+        },
+        "networkSecurityGroupName": {
+            "type": "string"
+        },
+        "networkSecurityGroupRules": {
+            "type": "array"
+        },
+        "subnetName": {
+            "type": "string"
+        },
+        "virtualNetworkName": {
+            "type": "string"
+        },
+        "addressPrefixes": {
+            "type": "array"
+        },
+        "subnets": {
+            "type": "array"
+        },
+        "publicIpAddressName": {
+            "type": "string"
+        },
+        "publicIpAddressType": {
+            "type": "string"
+        },
+        "publicIpAddressSku": {
+            "type": "string"
+        },
+        "virtualMachineName": {
+            "type": "string"
+        },
+        "virtualMachineComputerName": {
+            "type": "string"
+        },
+        "virtualMachineRG": {
+            "type": "string"
+        },
+        "osDiskType": {
+            "type": "string"
+        },
+        "osDiskDeleteOption": {
+            "type": "string"
+        },
+        "virtualMachineSize": {
+            "type": "string"
+        },
+        "networkInterfaceName": {
+            "type": "string"
+        },
+        "enableAcceleratedNetworking": {
+            "type": "bool"
+        },
+        "nicDeleteOption": {
+            "type": "string"
+        },
+        "hibernationEnabled": {
+            "type": "bool"
+        },
+        "adminUsername": {
+            "type": "string"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "enablePeriodicAssessment": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
+        "vnetName": "[parameters('virtualNetworkName')]",
+        "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('networkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-05-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": "[parameters('networkSecurityGroupRules')]"
+            }
+        },
+        {
+            "name": "[parameters('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-05-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": "[parameters('addressPrefixes')]"
+                },
+                "subnets": "[parameters('subnets')]"
+            }
+        },
+        {
+            "name": "[parameters('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('publicIpAddressType')]"
+            },
+            "sku": {
+                "name": "[parameters('publicIpAddressSku')]"
+            }
+        },
+        {
+            "name": "[parameters('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-05-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
+                "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgId')]"
+                },
+                "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
+            }
+        },
+        {
+            "name": "[parameters('virtualMachineName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2020-12-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('osDiskType')]"
+                        },
+                        "deleteOption": "[parameters('osDiskDeleteOption')]"
+                    },
+                    "imageReference": {
+                        "publisher": "canonical",
+                        "offer": "ubuntu-24_04-lts",
+                        "sku": "server-arm64",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "copy": [
+                        {
+                            "name": "networkInterfaceConfigurations",
+                            "count": 1,
+                            "input": {
+                                "name": "[parameters('networkInterfaceName')]",
+                                "properties": {
+                                    "primary": true,
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "[concat(take(parameters('networkInterfaceName'), sub(80, length('-defaultIpConfiguration'))), '-defaultIpConfiguration')]",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[variables('subnetRef')]"
+                                                },
+                                                "primary": true,
+                                                "applicationGatewayBackendAddressPools": [],
+                                                "loadBalancerBackendAddressPools": [],
+                                                "publicIPAddressConfiguration": {
+                                                    "name": "[parameters('publicIpAddressName')]",
+                                                    "properties": {
+                                                        "idleTimeoutInMinutes": 15,
+                                                        "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "networkSecurityGroup": "[if( equals( variables('nsgId'), ''), json('null'),json(concat('{\"id\": \"', variables('nsgId'), '\"}')))]",
+                                    "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]",
+                                    "deleteOption": "[parameters('nicDeleteOption')]"
+                                }
+                            }
+                        }
+                    ],
+                    "networkApiVersion": "2022-11-01"
+                },
+                "securityProfile": {},
+                "additionalCapabilities": {
+                    "hibernationEnabled": false
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachineComputerName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "linuxConfiguration": {
+                        "patchSettings": {
+                            "assessmentMode": "[parameters('enablePeriodicAssessment')]",
+                            "patchMode": "ImageDefault"
+                        }
+                    }
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            },
+            "placement": {
+                "zonePlacementPolicy": "Any"
+            }
+        }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "string",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}

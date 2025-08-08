@@ -1,0 +1,111 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "francecentral"
+        },
+        "networkSecurityGroupName": {
+            "value": "Karshad-nsg"
+        },
+        "networkSecurityGroupRules": {
+            "value": [
+                {
+                    "name": "HTTPS",
+                    "properties": {
+                        "priority": 300,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "443"
+                    }
+                },
+                {
+                    "name": "HTTP",
+                    "properties": {
+                        "priority": 320,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "80"
+                    }
+                }
+            ]
+        },
+        "subnetName": {
+            "value": "default"
+        },
+        "virtualNetworkName": {
+            "value": "Karshad-vnet"
+        },
+        "addressPrefixes": {
+            "value": [
+                "10.0.0.0/16"
+            ]
+        },
+        "subnets": {
+            "value": [
+                {
+                    "name": "default",
+                    "properties": {
+                        "addressPrefix": "10.0.0.0/24"
+                    }
+                }
+            ]
+        },
+        "publicIpAddressName": {
+            "value": "Karshad-ip"
+        },
+        "publicIpAddressType": {
+            "value": "Static"
+        },
+        "publicIpAddressSku": {
+            "value": "Standard"
+        },
+        "virtualMachineName": {
+            "value": "Karshad"
+        },
+        "virtualMachineComputerName": {
+            "value": "Karshad"
+        },
+        "virtualMachineRG": {
+            "value": "Karshad_group_v2"
+        },
+        "osDiskType": {
+            "value": "Standard_LRS"
+        },
+        "osDiskDeleteOption": {
+            "value": "Delete"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_B2pts_v2"
+        },
+        "networkInterfaceName": {
+            "value": "karshad391"
+        },
+        "enableAcceleratedNetworking": {
+            "value": true
+        },
+        "nicDeleteOption": {
+            "value": "Detach"
+        },
+        "hibernationEnabled": {
+            "value": false
+        },
+        "adminUsername": {
+            "value": "CwByMsQxwJbk"
+        },
+        "adminPassword": {
+            "value": "KarshadVM2025!@#"
+        },
+        "enablePeriodicAssessment": {
+            "value": "ImageDefault"
+        }
+    }
+}
