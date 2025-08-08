@@ -1,8 +1,16 @@
 function plugin(wss, options) {
-    var servers = {}
+    var servers = {};
+    const recentlyRedirected = new Map(); // Sunucuların yönlendirme zamanını tutar
 
     setInterval(() => {
-        // Get all servers with their latest CPU status
+        const now = Date.now();
+        // 1 dakika (60000 ms) önce yönlendirilmiş sunucuları temizle
+        for (const [ip, timestamp] of recentlyRedirected.entries()) {
+            if (now - timestamp > 60000) {
+                recentlyRedirected.delete(ip);
+            }
+        }
+
         const serverList = Object.entries(servers).map(([ip, server]) => {
             const lastStatus = server.status[server.status.length - 1];
             return {
@@ -10,9 +18,8 @@ function plugin(wss, options) {
                 ws: server.ws,
                 cpu: lastStatus && typeof lastStatus.cpu === 'number' ? lastStatus.cpu : null
             };
-        });
+        }).filter(s => !recentlyRedirected.has(s.ip));
 
-        // Sort idle servers by CPU usage in ascending order
         const idleServers = serverList
             .filter(s => s.cpu !== null && s.cpu < 90)
             .sort((a, b) => a.cpu - b.cpu);
@@ -24,13 +31,12 @@ function plugin(wss, options) {
                 const target = idleServers.find(s => s.ip !== server.ip && !usedIdleServers.has(s.ip));
                 if (target) {
                     usedIdleServers.add(target.ip);
+                    recentlyRedirected.set(target.ip, now); // Yönlendirme zamanını kaydet
                     server.ws.send(JSON.stringify({
                         loadbalancer: true,
                         redirect: target.ip
                     }));
-                } else {
-                    console.log(`No idle server available for ${server.ip}`);
-                }
+                } else options.noServer ? options.noServer(servers) : null;
             }
         });
     }, 1000);
@@ -57,7 +63,7 @@ function plugin(wss, options) {
         servers[ipaddr] = {
             ws: ws,
             status: []
-        }
+        };
 
         ws.on('message', (data) => {
             try {
@@ -80,9 +86,7 @@ function plugin(wss, options) {
             servers = servers.filter(s => s.ipaddr !== ipaddr);
         });
 
-    })
-
-
+    });
 }
 
-module.exports = plugin
+module.exports = plugin;
