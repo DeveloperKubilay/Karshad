@@ -5,24 +5,26 @@ const config = require('./config.json');
 const Azure = require('./MachineCreates/azure');
 
 let statusRef;
+let allowedIpaddrsRef;
 
 setInterval(() => {
     let dontCloseVm = false;
     Object.entries(statusRef).map(([ip, server]) => {
         const lastStatus = server.status[server.status.length - 1];
-        if (lastStatus < 90) dontCloseVm = true;
+        if (lastStatus < config.CpuReleaseUsage.min) dontCloseVm = true;
     })
     if(dontCloseVm) return;
     const date = new Date();
-    const aServer = servers.find(z=> z.time + (5 * 60 * 1000) > date);
+    const aServer = servers.find(z=> z.time + config.CpuReleaseUsage.time > date);
     if(!aServer) return;
     aServer.serve.delete();
     servers.splice(servers.indexOf(aServer), 1);
 }, 1000)
 
 
-async function createVm(status) {
+async function createVm(status, allowedIpaddrs) {
     statusRef = status || {};
+    allowedIpaddrsRef = allowedIpaddrs || [];
 
     const availableServers = config.Machines.find(z =>
         servers.filter(y => y.serverConfig.type == z.type).length < z.count + 1
@@ -44,7 +46,9 @@ async function createVm(status) {
 
             await serve;
 
+            allowedIpaddrsRef.push(serve.ip);
             console.log(serve.url)
+            
             break;
     }
 

@@ -21,13 +21,13 @@ function plugin(wss, options) {
         }).filter(s => !recentlyRedirected.has(s.ip));
 
         const idleServers = serverList
-            .filter(s => s.cpu !== null && s.cpu < 90)
+            .filter(s => s.cpu !== null && s.cpu < options.cpuMax)
             .sort((a, b) => a.cpu - b.cpu);
 
         const usedIdleServers = new Set(); 
 
         serverList.forEach(server => {
-            if (server.cpu !== null && server.cpu > 90) {
+            if (server.cpu !== null && server.cpu > options.cpuMax) {
                 const target = idleServers.find(s => s.ip !== server.ip && !usedIdleServers.has(s.ip));
                 if (target) {
                     usedIdleServers.add(target.ip);
@@ -36,7 +36,7 @@ function plugin(wss, options) {
                         loadbalancer: true,
                         redirect: target.ip
                     }));
-                } else options.noServer ? options.noServer(servers) : null;
+                } else options.noServer ? options.noServer(servers, options.allowedIpaddrs) : null;
             }
         });
     }, 1000);

@@ -6,5 +6,14 @@
            "run":"../run.sh",
            "count": 5
        }
+   ],
+   "CpuReleaseUsage":{
+       "min": 80,
+       "max": 90,
+       "time": 300000
+   },
+   "allowedIpaddrs": [
+       "127.0.0.1",
+       "::1"
    ]
 }
