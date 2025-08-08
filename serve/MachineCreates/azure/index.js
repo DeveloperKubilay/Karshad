@@ -4,16 +4,26 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const AzureSystem = {
-    subscriptionId: process.env.AZURE_SUBSCRIPTION_ID,
-    tenantId: process.env.AZURE_TENANT_ID,
-    clientId: process.env.AZURE_CLIENT_ID,
-    clientSecret: process.env.AZURE_CLIENT_SECRET,
-    location: process.env.AZURE_LOCATION || 'francecentral',
-
+    subscriptionId: null,
+    tenantId: null,
+    clientId: null,
+    clientSecret: null,
+    location: null,
     resourceGroupName: null,
     deploymentName: null,
     publicIp: null,
     token: null,
+    runScriptPath: null,
+
+    init(config) {
+        const prefix = config.envPrefix;
+        this.subscriptionId = process.env[`${prefix}SUBSCRIPTION_ID`];
+        this.tenantId = process.env[`${prefix}TENANT_ID`];
+        this.clientId = process.env[`${prefix}CLIENT_ID`];
+        this.clientSecret = process.env[`${prefix}CLIENT_SECRET`];
+        this.location = process.env[`${prefix}LOCATION`] || 'francecentral';
+        this.runScriptPath = config.run;
+    },
 
     async getAccessToken() {
         const tokenUrl = `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`;
@@ -53,7 +63,7 @@ const AzureSystem = {
     },
 
     getCloudInitScript() {
-        const runScriptPath = path.join(__dirname, '../run.sh');
+        const runScriptPath = path.join(__dirname, this.runScriptPath);
         const runScript = fs.readFileSync(runScriptPath, 'utf8').trim();
 
         return `#cloud-config
@@ -141,12 +151,16 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
         throw new Error('Deployment timeout');
     },
 
-    async delete() {
-        if (!this.resourceGroupName || !this.token) {
-            throw new Error('Resource group not found or not authenticated');
+    async delete(resourceGroupName = this.resourceGroupName) {
+        if (!this.token) {
+            throw new Error('Authentication token is missing. Please ensure you have called getAccessToken().');
         }
 
-        const url = `https://management.azure.com/subscriptions/${this.subscriptionId}/resourcegroups/${this.resourceGroupName}?api-version=2021-04-01`;
+        if (!resourceGroupName) {
+            throw new Error('Resource group name is missing. Please provide a valid resource group name.');
+        }
+
+        const url = `https://management.azure.com/subscriptions/${this.subscriptionId}/resourcegroups/${resourceGroupName}?api-version=2021-04-01`;
 
         await axios.delete(url, {
             headers: { 'Authorization': `Bearer ${this.token}` }
@@ -154,9 +168,9 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
 
     },
 
-    async createInstance() {
+    async createInstance(config) {
         try {
-
+            this.init(config);
             await this.getAccessToken();
             this.generateResourceGroupName();
             await this.createResourceGroup();
