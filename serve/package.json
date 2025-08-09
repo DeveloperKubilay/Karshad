@@ -13,6 +13,7 @@
     "@azure/arm-resources": "^7.0.0",
     "@azure/identity": "^4.11.1",
     "axios": "^1.11.0",
+    "cloudflare": "^4.5.0",
     "dotenv": "^16.0.3",
     "fastify": "^5.4.0"
   }
