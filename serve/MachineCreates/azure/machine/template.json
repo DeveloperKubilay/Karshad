@@ -4,7 +4,7 @@
     "parameters": {
         "location": {
             "type": "string",
-            "defaultValue": "francecentral"
+            "defaultValue": "placeholder"
         },
         "virtualMachineName": {
             "type": "string",
@@ -12,7 +12,7 @@
         },
         "virtualMachineSize": {
             "type": "string",
-            "defaultValue": "Standard_B2pts_v2"
+            "defaultValue": "placeholder"
         },
         "adminUsername": {
             "type": "string"

@@ -3,13 +3,13 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "francecentral"
+            "value": "placeholder"
         },
         "virtualMachineName": {
             "value": "Karshad"
         },
         "virtualMachineSize": {
-            "value": "Standard_B2pts_v2"
+            "value": "placeholder"
         },
         "adminUsername": {
             "value": "placeholder"

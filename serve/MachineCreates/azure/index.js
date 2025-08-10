@@ -1,7 +1,6 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 class AzureSystem {
     constructor() {
@@ -10,6 +9,7 @@ class AzureSystem {
         this.clientId = null;
         this.clientSecret = null;
         this.location = null;
+        this.machineType = null;
         this.resourceGroupName = null;
         this.deploymentName = null;
         this.publicIp = null;
@@ -29,7 +29,8 @@ class AzureSystem {
         this.tenantId = process.env[`${prefix}TENANT_ID`];
         this.clientId = process.env[`${prefix}CLIENT_ID`];
         this.clientSecret = process.env[`${prefix}CLIENT_SECRET`];
-        this.location = process.env[`${prefix}LOCATION`] || 'francecentral';
+        this.location = config.location || process.env[`${prefix}LOCATION`] || 'francecentral';
+        this.machineType = config.machineType || 'Standard_B2pts_v2';
         this.runScriptPath = config.run;
     }
 
@@ -65,6 +66,7 @@ class AzureSystem {
         return {
             ...parametersTemplate,
             location: { value: this.location },
+            virtualMachineSize: { value: this.machineType },
             adminUsername: { value: process.env.machineName },
             adminPassword: { value: process.env.machinePass }
         };
