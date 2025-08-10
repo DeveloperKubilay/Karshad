@@ -12,7 +12,7 @@ async function test() {
     console.log(serve);
     setTimeout(()=>{
         serve.delete()
-    },20000)
+    },3000)
     //console.log(serve.ip);
 }
 
