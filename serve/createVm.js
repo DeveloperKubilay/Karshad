@@ -39,7 +39,7 @@ async function createVm(status, allowedIpaddrs) {
     switch (serverConfig.type) {
         case 'azure':
 
-            const serve = Azure.create(serverConfig);
+            const serve = await Azure.create(serverConfig);
 
             servers.push({
                 serverConfig,

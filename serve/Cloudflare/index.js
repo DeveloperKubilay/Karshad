@@ -1,6 +1,6 @@
 const path = require('path');
 // .env dosyasını repo kökünden yükle (..\..\.env)
-require('dotenv').config({ path: path.resolve(__dirname,  '..', '.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const Cloudflare = require("cloudflare");
 const zone_id = process.env.CLOUDFLARE_ZONE_ID;
@@ -17,19 +17,19 @@ async function enableUnderAttackMode(open = false) {
 
 //enableUnderAttackMode(true);
 
-async function createDNSRecord(type, name, content, proxied = false) {
+async function createDNSRecord(type, name, content) {
     const response = await client.dns.records.create({
         zone_id,
         type,
         name,
         content,
-        proxied
+        proxied: true
     });
     console.log("DNS kaydı başarıyla oluşturuldu:", response);
     return response
 }
 
-//createDNSRecord("A", "backend9824", "31.142.195.151", true);
+//createDNSRecord("A", "backend9824", "31.142.195.151");
 
 
 async function deleteDnsRecord(recordId) {
@@ -40,61 +40,44 @@ async function deleteDnsRecord(recordId) {
 
 //deleteDnsRecord("a0e7941b278ce84c714db03eccdc0cc8");
 
-async function editFirewallRules(names) {
-    // Migrate to Rulesets API: edit rules in the http_request_firewall_custom entrypoint ruleset
-    const phase = 'http_request_firewall_custom';
-    const targetExpression = "(ip.src ne 31.142.195.32) and (http.request.uri.path contains \"backend9824\")";
-
-    // Fetch entrypoint ruleset for the given phase
-    let entrypoint;
-    try {
-        entrypoint = await client.rulesets.phases.get(phase, { zone_id });
-    } catch (err) {
-        console.error('Entrypoint ruleset alınamadı (Rulesets API). Zone veya yetkiyi kontrol edin.', err?.message || err);
-        return;
-    }
+async function editFirewallRules(add, ip) {
+    const entrypoint = await client.rulesets.phases.get('http_request_firewall_custom', { zone_id });
     const rulesetId = entrypoint.id;
 
-    let matched = 0;
-    let updated = 0;
+    const startPrompt = `(${process.env.CLOUDFLARE_URLS.split(",").map(url => `http.host eq "${url}"`).join(" or ")}) and `;
+
     for (const rule of entrypoint.rules) {
-        console.log(rule)
-        const matchesById = names.includes(rule.id);
-        const matchesByRef = rule.ref ? names.includes(rule.ref) : false;
-        if (!matchesById && !matchesByRef) continue;
+        const matchesById = process.env.CLOUDFLARE_RULES.split(",").includes(rule.description);
+        if (!matchesById) continue;
 
-        matched++;
-
-        try {
-            // Rulesets API kural güncellemede 'action' dahil zorunlu alanlar bekler.
-            // Mevcut kuralın aksiyonunu koruyarak sadece expression'ı güncelliyoruz.
-            const payload = {
-                zone_id,
-                action: rule.action, // örn: 'block'
-                expression: targetExpression,
-                enabled: rule.enabled,
-                description: rule.description,
-            };
-            // Varsa action_parameters'ı da koru
-            if (rule.action_parameters) {
-                payload.action_parameters = rule.action_parameters;
-            }
-
-            const res = await client.rulesets.rules.edit(rulesetId, rule.id, payload);
-            console.log(`Rule updated: ruleset=${rulesetId} rule=${rule.id} (ref=${rule.ref || '-'})`);
-            updated++;
-        } catch (err) {
-            console.error('Failed to update rule', { rulesetId, ruleId: rule.id, ref: rule.ref, error: err?.message || err });
+        let ipList = [];
+        const ipRegex = /ip\.src ne ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/g;
+        let ipMatch;
+        while ((ipMatch = ipRegex.exec(rule.expression)) !== null) {
+            ipList.push(ipMatch[1]);
         }
-    }
 
-    if (matched === 0) {
-        console.warn('Hiçbir kural ID/ref eşleşmedi. Güncellemek istediğiniz kuralın id veya ref değerini geçin.');
-    } else if (updated === 0) {
-        console.warn(`Eşleşen ${matched} kural var fakat güncelleme başarısız oldu. Hata detayları yukarıda.`);
-    } else {
-        console.log(`Toplam ${matched} eşleşmeden ${updated} kural güncellendi.`);
+
+        if (add) {
+            if (!ipList.includes(ip)) {
+                ipList.push(ip);
+            }
+        } else {
+            ipList = ipList.filter(existingIp => existingIp !== ip);
+        }
+
+        const payload = {
+            zone_id,
+            ...rule,
+            expression: startPrompt + `(${ipList.map(ip => `ip.src ne ${ip}`).join(" and ")})`,
+        };
+
+        await client.rulesets.rules.edit(rulesetId, rule.id, payload);
     }
 }
 
-editFirewallRules(["eb28686e6d934a28a5c941c703bf4c34"])
+/*
+editFirewallRules(
+    false,
+    "31.142.195.35"
+)*/
