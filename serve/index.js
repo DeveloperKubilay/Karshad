@@ -27,9 +27,9 @@ fastify.get('/', async (request, reply) => {
 
 serve(wss, {
     token: process.env.WS_TOKEN,
-    allowedIpaddrs: config.allowedIpaddrs,
     noServer: createVm,
-    cpuMax: config.CpuReleaseUsage.max,
+    cloudflare: require('./Cloudflare'),
+    config: config
 })
 
 fastify.listen({ port: 5000, host: '0.0.0.0' })

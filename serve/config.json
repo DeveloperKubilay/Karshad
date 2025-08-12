@@ -15,5 +15,11 @@
    "allowedIpaddrs": [
        "127.0.0.1",
        "::1"
-   ]
+   ],
+   "UnderAttack": {
+       "thresholdIncrease": 3.0,
+       "thresholdDecrease": 1.3,
+       "minRequests": 100,
+       "minDuration": 300000
+   }
 }

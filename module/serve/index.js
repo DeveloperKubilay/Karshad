@@ -1,6 +1,9 @@
 function plugin(wss, options) {
     var servers = {};
     const recentlyRedirected = new Map(); 
+    let requestCounts = [];
+    let attackModeActive = false;
+    let attackModeActivatedAt = null;
 
     function broadcastToDashboard(data) {
         wss.clients.forEach(client => {
@@ -40,13 +43,13 @@ function plugin(wss, options) {
         }).filter(s => !recentlyRedirected.has(s.ip));
 
         const idleServers = serverList
-            .filter(s => s.cpu !== null && s.cpu < options.cpuMax)
+            .filter(s => s.cpu !== null && s.cpu < options.config.CpuReleaseUsage.max)
             .sort((a, b) => a.cpu - b.cpu);
 
         const usedIdleServers = new Set(); 
 
         serverList.forEach(server => {
-            if (server.cpu !== null && server.cpu > options.cpuMax) {
+            if (server.cpu !== null && server.cpu > options.config.CpuReleaseUsage.max) {
                 const target = idleServers.find(s => s.ip !== server.ip && !usedIdleServers.has(s.ip));
                 if (target) {
                     usedIdleServers.add(target.ip);
@@ -55,7 +58,7 @@ function plugin(wss, options) {
                         loadbalancer: true,
                         redirect: target.ip
                     }));
-                } else options.noServer ? options.noServer(servers, options.allowedIpaddrs) : null;
+                } else options.noServer ? options.noServer(servers, options.config.allowedIpaddrs) : null;
             }
         });
 
@@ -67,6 +70,31 @@ function plugin(wss, options) {
         const totalReqCount = serverList.reduce((sum, s) => sum + s.reqCount, 0);
         const totalReqBytes = serverList.reduce((sum, s) => sum + s.reqBytes, 0);
         const totalResBytes = serverList.reduce((sum, s) => sum + s.resBytes, 0);
+
+        // İstek sayısı analizi
+        requestCounts.push(totalReqCount);
+        if (requestCounts.length > 200) {
+            requestCounts.shift();
+        }
+
+        if (requestCounts.length === 200) {
+            const avgRequests = requestCounts.reduce((sum, count) => sum + count, 0) / requestCounts.length;
+            if (!attackModeActive && avgRequests > options.config.UnderAttack.minRequests && totalReqCount > avgRequests * options.config.UnderAttack.thresholdIncrease) {
+                options.cloudflare.attackMode(true);
+                attackModeActive = true;
+                attackModeActivatedAt = now;
+            }
+        }
+
+        // Attack mode kapatma kontrolü
+        if (attackModeActive && attackModeActivatedAt && (now - attackModeActivatedAt > options.config.UnderAttack.minDuration)) { // Süre geçti mi?
+            const avgRequests = requestCounts.reduce((sum, count) => sum + count, 0) / requestCounts.length;
+            if (totalReqCount <= avgRequests * options.config.UnderAttack.thresholdDecrease) {
+                options.cloudflare.attackMode(false);
+                attackModeActive = false;
+                attackModeActivatedAt = null;
+            }
+        }
 
         broadcastToDashboard({
             serverCount: serverList.length,
@@ -102,7 +130,7 @@ function plugin(wss, options) {
             return;
         }
         const ipaddr = req.socket.remoteAddress || req.socket.localAddress;
-        if (!options.allowedIpaddrs.includes(ipaddr)) {
+        if (!options.config.allowedIpaddrs.includes(ipaddr)) {
             ws.close(4000, 'IP Address Not Allowed');
             return;
         }

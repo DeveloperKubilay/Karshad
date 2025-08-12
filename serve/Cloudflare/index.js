@@ -1,21 +1,18 @@
 const path = require('path');
-// .env dosyasını repo kökünden yükle (..\..\.env)
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
-
 const Cloudflare = require("cloudflare");
 const zone_id = process.env.CLOUDFLARE_ZONE_ID;
 const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 const client = new Cloudflare({ apiToken });
 
 
-async function enableUnderAttackMode(open = false) {
+async function UnderAttackMode(open = false) {
     await client.zones.settings.edit("security_level", {
         zone_id,
         value: open ? "under_attack" : "high"
     });
 }
 
-//enableUnderAttackMode(true);
+//UnderAttackMode(true);
 
 async function createDNSRecord(type, name, content) {
     const response = await client.dns.records.create({
@@ -25,8 +22,7 @@ async function createDNSRecord(type, name, content) {
         content,
         proxied: true
     });
-    console.log("DNS kaydı başarıyla oluşturuldu:", response);
-    return response
+    return response;
 }
 
 //createDNSRecord("A", "backend9824", "31.142.195.151");
@@ -81,3 +77,23 @@ editFirewallRules(
     false,
     "31.142.195.35"
 )*/
+
+
+async function addVm(ip,name) {
+    await editFirewallRules(true,ip)
+    return await createDNSRecord("A", name, ip);
+}
+
+async function deleteVm(rule) {
+    await editFirewallRules(false,ip)
+    console.log("debug", rule)
+    await deleteDnsRecord(rule.id);
+}
+
+module.exports = {
+    UnderAttackMode,
+    addVm,
+    deleteVm
+};
+
+
