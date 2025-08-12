@@ -15,9 +15,9 @@ setInterval(() => {
         const lastStatus = server.status[server.status.length - 1];
         if (lastStatus < config.CpuReleaseUsage.min) dontCloseVm = true;
     });
-    if (dontCloseVm) return;
+    if (dontCloseVm) return;//cpu kullanımı hala fazla ise bırakılıyor
     const date = new Date();
-    const aServer = servers.find(z => z.time + config.CpuReleaseUsage.time > date);
+    const aServer = servers.find(z => z.time + config.CpuReleaseUsage.removeVmTimeout > date);
     if (!aServer) return;
 
     deleteVm(aServer.rule)

@@ -8,9 +8,10 @@
        }
    ],
    "CpuReleaseUsage":{
-       "min": 80,
-       "max": 90,
-       "time": 300000
+       "min": 30,
+       "max": 40,
+       "removeVmTimeout": 300000,
+       "redirectionTimeout": 60000
    },
    "allowedIpaddrs": [
        "127.0.0.1",

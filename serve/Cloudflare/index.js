@@ -81,7 +81,7 @@ editFirewallRules(
 
 async function addVm(ip,name) {
     await editFirewallRules(true,ip)
-    return await createDNSRecord("A", name, ip);
+    return await createDNSRecord("A", name.toLowerCase().replace("-",""), ip);
 }
 
 async function deleteVm(rule) {

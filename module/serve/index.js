@@ -24,7 +24,7 @@ function plugin(wss, options) {
         const now = Date.now();
         // 1 dakika (60000 ms) önce yönlendirilmiş sunucuları temizle
         for (const [ip, timestamp] of recentlyRedirected.entries()) {
-            if (now - timestamp > 60000) {
+            if (now - timestamp > options.config.CpuReleaseUsage.redirectionTimeout) {
                 recentlyRedirected.delete(ip);
             }
         }
@@ -52,13 +52,19 @@ function plugin(wss, options) {
             if (server.cpu !== null && server.cpu > options.config.CpuReleaseUsage.max) {
                 const target = idleServers.find(s => s.ip !== server.ip && !usedIdleServers.has(s.ip));
                 if (target) {
-                    usedIdleServers.add(target.ip);
+                    usedIdleServers.set(target.ip, true);
                     recentlyRedirected.set(target.ip, now); // Yönlendirme zamanını kaydet
                     server.ws.send(JSON.stringify({
                         loadbalancer: true,
                         redirect: target.ip
                     }));
-                } else options.noServer ? options.noServer(servers, options.config.allowedIpaddrs) : null;
+                } else {
+                    const noServerIp = server.ip;
+                    if (!recentlyRedirected.has(noServerIp)) {
+                        options?.noServer(servers, options.config.allowedIpaddrs);
+                        recentlyRedirected.set(noServerIp, now); // noServer çağrılan IP'yi kaydet
+                    }
+                }
             }
         });
 
