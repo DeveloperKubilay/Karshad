@@ -1,10 +1,11 @@
 const fastify = require('fastify')()
+require('dotenv').config();
 const { serve } = require('../module')
 const WebSocket  = require('ws')
 const createVm = require('./createVm')
+const cloudflare = require('./Cloudflare')
 const path = require('path')
 const fs = require('fs')
-require('dotenv').config();
 const config = require('./config.json');
 
 const wss = new WebSocket.Server({ server: fastify.server });
@@ -28,7 +29,7 @@ fastify.get('/', async (request, reply) => {
 serve(wss, {
     token: process.env.WS_TOKEN,
     noServer: createVm,
-    cloudflare: require('./Cloudflare'),
+    cloudflare: cloudflare,
     config: config
 })
 

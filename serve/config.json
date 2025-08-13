@@ -8,15 +8,17 @@
        }
    ],
    "CpuReleaseUsage":{
-       "min": 30,
+       "min": 10,
        "max": 40,
        "removeVmTimeout": 300000,
-       "redirectionTimeout": 60000
+       "redirectionTimeout": 90000,
+       "nextRemoveVmTimeout": 30000
    },
    "allowedIpaddrs": [
        "127.0.0.1",
        "::1"
    ],
+   "domain":"http://{server}.tmaldergi.com",
    "UnderAttack": {
        "thresholdIncrease": 3.0,
        "thresholdDecrease": 1.3,

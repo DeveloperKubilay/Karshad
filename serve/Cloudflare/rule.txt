@@ -1,0 +1,1 @@
+(http.host eq "database.test.com") and (ip.src ne 31.142.195.32)

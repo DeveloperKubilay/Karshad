@@ -4,7 +4,6 @@ const zone_id = process.env.CLOUDFLARE_ZONE_ID;
 const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 const client = new Cloudflare({ apiToken });
 
-
 async function UnderAttackMode(open = false) {
     await client.zones.settings.edit("security_level", {
         zone_id,
@@ -81,13 +80,17 @@ editFirewallRules(
 
 async function addVm(ip,name) {
     await editFirewallRules(true,ip)
-    return await createDNSRecord("A", name.toLowerCase().replace("-",""), ip);
+    name = name.toLowerCase().replace("-","")
+    return {
+        record: await createDNSRecord("A", name, ip),
+        name: name,
+    }
 }
 
 async function deleteVm(rule) {
-    await editFirewallRules(false,ip)
-    console.log("debug", rule)
-    await deleteDnsRecord(rule.id);
+    await editFirewallRules(false, rule.ip);
+    console.log("debug", rule.record)
+    await deleteDnsRecord(rule.record.id);
 }
 
 module.exports = {

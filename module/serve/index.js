@@ -1,21 +1,20 @@
 function plugin(wss, options) {
     var servers = {};
-    const recentlyRedirected = new Map(); 
+    const recentlyRedirected = new Map();
     let requestCounts = [];
     let attackModeActive = false;
     let attackModeActivatedAt = null;
 
     function broadcastToDashboard(data) {
         wss.clients.forEach(client => {
-            if(!client.dashboard) return;
+            if (!client.dashboard) return;
             if (client.readyState === 1) {
                 try {
                     client.send(JSON.stringify({
                         dashboard: true,
                         ...data
                     }));
-                } catch (e) {
-                }
+                } catch (e) { }
             }
         });
     }
@@ -30,6 +29,7 @@ function plugin(wss, options) {
         }
 
         const serverList = Object.entries(servers).map(([ip, server]) => {
+            if(server.ws.dashboard) return null
             const lastStatus = server.status[server.status.length - 1];
             return {
                 ip,
@@ -40,15 +40,15 @@ function plugin(wss, options) {
                 reqBytes: lastStatus ? Number(lastStatus.reqBytes) : 0,
                 resBytes: lastStatus ? Number(lastStatus.resBytes) : 0
             };
-        }).filter(s => !recentlyRedirected.has(s.ip));
+        }).filter(z => z)
 
         const idleServers = serverList
             .filter(s => s.cpu !== null && s.cpu < options.config.CpuReleaseUsage.max)
             .sort((a, b) => a.cpu - b.cpu);
 
-        const usedIdleServers = new Set(); 
+        const usedIdleServers = new Set();
 
-        serverList.forEach(server => {
+        serverList.filter(s => !recentlyRedirected.has(s.ip)).forEach(server => {
             if (server.cpu !== null && server.cpu > options.config.CpuReleaseUsage.max) {
                 const target = idleServers.find(s => s.ip !== server.ip && !usedIdleServers.has(s.ip));
                 if (target) {
@@ -69,7 +69,7 @@ function plugin(wss, options) {
         });
 
         // Ortalama CPU, RAM, istek sayısı, alınan ve gönderilen KB bilgilerini hesapla
-        const avgCpu = serverList.length > 0 ? 
+        const avgCpu = serverList.length > 0 ?
             (serverList.reduce((sum, s) => sum + (s.cpu || 0), 0) / serverList.length).toFixed(2) : 0;
         const avgMem = serverList.length > 0 ?
             (serverList.reduce((sum, s) => sum + (s.mem || 0), 0) / serverList.length).toFixed(2) : 0;
@@ -102,6 +102,7 @@ function plugin(wss, options) {
             }
         }
 
+
         broadcastToDashboard({
             serverCount: serverList.length,
             avgCpu: avgCpu,
@@ -130,18 +131,24 @@ function plugin(wss, options) {
         const urlParams = new URLSearchParams(req.url.slice(req.url.indexOf('?') + 1));
         const token = urlParams.get('token');
         const dashboard = urlParams.get('dashboard');
-        if(dashboard) ws.dashboard = true;
+        if (dashboard) ws.dashboard = true;
         if (token !== options.token) {
             ws.close(4000, 'Invalid Token');
             return;
         }
-        const ipaddr = req.socket.remoteAddress || req.socket.localAddress;
+        var ipaddr = req.socket.remoteAddress || req.socket.localAddress;
         if (!options.config.allowedIpaddrs.includes(ipaddr)) {
             ws.close(4000, 'IP Address Not Allowed');
             return;
         }
 
+        ipaddr = dashboard ? ipaddr+"-dashboard" : ipaddr;
         ws.ipaddr = ipaddr;
+
+        if(servers[ipaddr]) {
+            servers[ipaddr].ws?.close()
+            delete servers[ipaddr]
+        }
 
         servers[ipaddr] = {
             ws: ws,
@@ -153,12 +160,12 @@ function plugin(wss, options) {
                 const obj = JSON.parse(data);
                 if (!obj.loadbalancer) return;
                 delete obj.loadbalancer;
-                if(servers[ipaddr].status.length > 200) {
+                if (servers[ipaddr].status.length > 200) {
                     servers[ipaddr].status.shift();
                 }
                 servers[ipaddr].status.push(obj);
             } catch (e) {
-            //    console.log('Received data is not JSON:', data.toString());
+                //    console.log('Received data is not JSON:', data.toString());
             }
         });
 
