@@ -6,9 +6,9 @@ sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
-sudo apt install nodejs -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+npm i express
 
-sudo mkdir -p /var/www
-echo "<h1>Karshad Load Balancer Server is Running!</h1><p>ARM64 Ubuntu Server</p>" > /var/www/index.html
-cd /var/www
-nohup     sudo python3 -m http.server 80      > /dev/null 2>&1 &
+cd $home
+nohup sudo node index.js > /dev/null 2>&1 &

@@ -82,7 +82,7 @@ function plugin(fastify, opts, done) {
          reqCount = 0;
          reqBytes = 0;
          resBytes = 0;
-     }, 1000);
+     }, 5000);
 
     fastify.addHook('onClose', async () => {
         clearInterval(interval);

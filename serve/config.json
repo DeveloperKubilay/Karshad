@@ -9,9 +9,9 @@
    ],
    "CpuReleaseUsage":{
        "min": 10,
-       "max": 40,
-       "removeVmTimeout": 300000,
-       "redirectionTimeout": 90000,
+       "max": 20,
+       "removeVmTimeout": 300000000000,
+       "redirectionTimeout": 900000000,
        "nextRemoveVmTimeout": 30000
    },
    "allowedIpaddrs": [
