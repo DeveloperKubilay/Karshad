@@ -1,0 +1,90 @@
+{
+  "canIpForward": false,
+  "confidentialInstanceConfig": {
+    "enableConfidentialCompute": false
+  },
+  "deletionProtection": false,
+  "description": "",
+  "disks": [
+    {
+      "autoDelete": true,
+      "boot": true,
+      "deviceName": "instance-20250905-140948",
+      "diskEncryptionKey": {},
+      "initializeParams": {
+        "diskSizeGb": "10",
+        "diskType": "projects/dotted-lens-470017-f5/zones/us-central1-f/diskTypes/hyperdisk-balanced",
+        "labels": {},
+        "provisionedIops": "3060",
+        "provisionedThroughput": "155",
+        "sourceImage": "projects/debian-cloud/global/images/debian-12-bookworm-arm64-v20250812"
+      },
+      "mode": "READ_WRITE",
+      "type": "PERSISTENT"
+    }
+  ],
+  "displayDevice": {
+    "enableDisplay": false
+  },
+  "guestAccelerators": [],
+  "instanceEncryptionKey": {},
+  "keyRevocationActionType": "NONE",
+  "labels": {
+    "goog-ec-src": "vm_add-rest"
+  },
+  "machineType": "projects/dotted-lens-470017-f5/zones/us-central1-b/machineTypes/c4a-standard-1",
+  "metadata": {
+    "items": []
+  },
+  "name": "instance-20250905-140948",
+  "networkInterfaces": [
+    {
+      "accessConfigs": [
+        {
+          "name": "External NAT",
+          "networkTier": "PREMIUM"
+        }
+      ],
+      "nicType": "GVNIC",
+      "stackType": "IPV4_ONLY",
+      "subnetwork": "projects/dotted-lens-470017-f5/regions/us-central1/subnetworks/default"
+    }
+  ],
+  "params": {
+    "resourceManagerTags": {}
+  },
+  "reservationAffinity": {
+    "consumeReservationType": "NO_RESERVATION"
+  },
+  "scheduling": {
+    "automaticRestart": false,
+    "instanceTerminationAction": "STOP",
+    "onHostMaintenance": "TERMINATE",
+    "provisioningModel": "SPOT"
+  },
+  "serviceAccounts": [
+    {
+      "email": "876598442727-compute@developer.gserviceaccount.com",
+      "scopes": [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring.write",
+        "https://www.googleapis.com/auth/service.management.readonly",
+        "https://www.googleapis.com/auth/servicecontrol",
+        "https://www.googleapis.com/auth/trace.append"
+      ]
+    }
+  ],
+  "shieldedInstanceConfig": {
+    "enableIntegrityMonitoring": true,
+    "enableSecureBoot": false,
+    "enableVtpm": true
+  },
+  "tags": {
+    "items": [
+      "https-server",
+      "http-server"
+    ]
+  },
+  "zone": "projects/dotted-lens-470017-f5/zones/us-central1-b"
+}
