@@ -10,6 +10,11 @@ async function test() {
     const serve = await Google.create(config);
     console.log(serve);
     //console.log(serve.ip);
+    setTimeout(() => {
+        console.log("Deleting instance...");
+        serve.delete()
+    }, 15 * 1000)
 }
+
 
 test()

@@ -10,5 +10,4 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-cd $HOME
 nohup sudo python3 -m http.server 80 > /dev/null 2>&1 &

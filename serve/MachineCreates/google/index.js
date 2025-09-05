@@ -30,8 +30,12 @@ class GoogleSystem {
         const runShPath = path.join(__dirname, 'run.sh');
         let runShContent = fs.readFileSync(runShPath, 'utf8');
 
+        let stopShPath = path.join(__dirname, 'stop.sh');
+        let stopShContent = fs.existsSync(stopShPath) ? fs.readFileSync(stopShPath, 'utf8') : '';
+
         if (template.metadata && Array.isArray(template.metadata.items)) {
             template.metadata.items.push({ key: 'startup-script', value: runShContent });
+            template.metadata.items.push({ key: 'shutdown-script', value: stopShContent });
         }
 
         const [response] = await this.client.insert({

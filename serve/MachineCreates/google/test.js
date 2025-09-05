@@ -34,12 +34,12 @@ async function setInstanceStatus(instanceName, start) {
 
 
 async function main() {
-    const instanceName = "instance-1757095267949";
+    const instanceName = "instance-1757097947067";
 
     let status = await getInstanceStatus(instanceName);
     console.log(`Instance ${instanceName} durumu: ${status}`);
 
-    await setInstanceStatus(instanceName, true);
+    await setInstanceStatus(instanceName, false);
 
     status = await getInstanceStatus(instanceName);
     console.log(`Instance ${instanceName} durumu: ${status}`);
