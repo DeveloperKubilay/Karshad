@@ -1,4 +1,3 @@
-
 # Karshad 🧠🔥
 
 > Next-level load balancer & server orchestrator for Gen Z devs. Real-time dashboard, auto-scaling, Cloudflare & Azure integration. No cap, this is cloud game on hard mode. 
@@ -91,8 +90,4 @@ Edit `serve/config.json` for:
 - CPU thresholds
 - Allowed IPs
 - Under-attack detection
-<<<<<<< HEAD
 ---
-=======
----
->>>>>>> 9a743d23714b322cb54289d4bfa91079b0da9692
