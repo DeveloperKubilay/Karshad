@@ -10,7 +10,7 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 npm i express
 
-cd $home
+cd $HOME
 echo "const express = require('express'),
       app = express(),
       port = 80
