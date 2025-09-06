@@ -1,7 +1,8 @@
 const servers = []
 const config = require('./config.json');
 const { addVm, deleteVm } = require('./Cloudflare');
-const logger = new (require('../module/log.js'))(config.log.file);
+const logger = require('../module/log.js')
+const logg = new logger(config.log.file);
 
 //Servers
 const Azure = require('./MachineCreates/azure');
@@ -20,24 +21,22 @@ setInterval(() => {
         return Number(lastStatus.cpu) || 0;
     });
     const avgCpuUsage = cpuUsages.reduce((sum, usage) => sum + usage, 0) / cpuUsages.length;
-    if (avgCpuUsage < config.CpuReleaseUsage.min) dontCloseVm = true;
+    if (avgCpuUsage > config.CpuReleaseUsage.min) dontCloseVm = true;
     if (dontCloseVm) return; //cpu kullanımı hala fazla ise bırakılıyor
 
-    const date = new Date();
-    if (date.getTime() < nextDeleteTime) return; // Silme zamanı gelmediyse çık
+    const date = Date.now();
+    if (date < nextDeleteTime) return; // Silme zamanı gelmediyse çık
 
     const aServer = servers.find(z => z.time + config.CpuReleaseUsage.MinVmDuration < date);
     if (!aServer) return;
 
-    aServer.rule.ip = aServer.serve.ip;
+    logg.log(config.log.vmInfo, "Machine deleted", aServer.serve.ip, aServer.serve.url);
 
-    logger.log(config.log.vmInfo, "Machine deleted", aServer.rule.ip, aServer.serve.url);
-    
-    deleteVm(aServer.rule);
+    deleteVm(aServer.serve.rule);
     aServer.serve.delete();
     servers.splice(servers.indexOf(aServer), 1);
 
-    nextDeleteTime = date.getTime() + config.CpuReleaseUsage.nextRemoveVmTimeout; // Yeni silme zamanı ayarla
+    nextDeleteTime = date + config.CpuReleaseUsage.nextRemoveVmTimeout; // Yeni silme zamanı ayarla
 }, 1000)
 
 
@@ -51,7 +50,7 @@ async function createVm(status, allowedIpaddrs) {
         (servers.filter(y => y.serverConfig.type == z.type)?.length || 0) < z.count + 1
     );
 
-    logger.log(config.log.cpuInfo, "Machine creating", serverConfig.type)
+    logg.log(config.log.cpuInfo, "Machine creating", serverConfig.type)
 
     const serve = await (
         serverConfig.type == "Azure" ? Azure :
@@ -69,8 +68,8 @@ async function createVm(status, allowedIpaddrs) {
     serve.rule = await addVm(serve.ip, serve.resourceGroup)
     serve.url = config.domain.replace("{server}", serve.rule.name);
     allowedIpaddrsRef.push(serve.ip);
-    logger.log(config.log.vmInfo, "Machine created", serve.ip, serve.url);
-    console.log(serve.url);
+    logg.log(config.log.vmInfo, "Machine created", serve.ip, serve.url);
+    console.log("Machine created", serve.ip, serve.url);
 
 }
 

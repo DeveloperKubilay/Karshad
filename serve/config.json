@@ -1,22 +1,22 @@
 {
     "Machines": [
         {
-            "type": "Azure",
-            "envPrefix": "AZURE_",
-            "count": 5
-        },
-        {
             "type": "Google",
             "ProjectName": "false-chat",
             "env": "env.json",
             "template": "template.json",
             "count": 5
+        },
+        {
+            "type": "Azure",
+            "envPrefix": "AZURE_",
+            "count": 5
         }
     ],
     "CpuReleaseUsage": {
         "min": 45,
-        "max": 90,
-        "MinVmDuration": 300000000000,
+        "max": 50,
+        "MinVmDuration": 30000,
         "CreateVmTimeout": 900000000,
         "nextRemoveVmTimeout": 30000
     },

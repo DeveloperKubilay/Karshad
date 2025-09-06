@@ -89,7 +89,6 @@ async function addVm(ip,name) {
 
 async function deleteVm(rule) {
     await editFirewallRules(false, rule.ip);
-    console.log("debug", rule.record)
     await deleteDnsRecord(rule.record.id);
 }
 

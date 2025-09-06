@@ -1,7 +1,9 @@
 const fs = require('fs');
+const logger = require('../log.js')
 
 function plugin(wss, options) {
-    const logger = new (require('../log.js'))(options.log.file);
+    const logg = new logger(options.config.log.file);
+    logg.newSession();
 
     var servers = {};
     const recentlyRedirected = new Map();
@@ -92,7 +94,7 @@ function plugin(wss, options) {
             if (!attackModeActive && avgRequests > options.config.UnderAttack.minRequests && totalReqCount > avgRequests * options.config.UnderAttack.thresholdIncrease) {
                 options.cloudflare.UnderAttackMode(true);
                 attackModeActive = true;
-                logger.log(options.config.log.attackInfo, 'Under Attack Mode activated');
+                logg.log(options.config.log.attackInfo, 'Under Attack Mode activated');
                 attackModeActivatedAt = now;
             }
         }
@@ -104,7 +106,7 @@ function plugin(wss, options) {
                 options.cloudflare.UnderAttackMode(false);
                 attackModeActive = false;
                 console.log('Under Attack Mode deactivated');
-                logger.log(options.config.log.attackInfo, 'Under Attack Mode deactivated');
+                logg.log(options.config.log.attackInfo, 'Under Attack Mode deactivated');
                 attackModeActivatedAt = null;
             }
         }
