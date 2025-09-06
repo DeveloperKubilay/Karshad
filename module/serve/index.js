@@ -7,6 +7,7 @@ function plugin(wss, options) {
 
     var servers = {};
     const recentlyRedirected = new Map();
+    let VmCreatedAt = null;
     let requestCounts = [];
     let attackModeActive = false;
     let attackModeActivatedAt = null;
@@ -29,7 +30,7 @@ function plugin(wss, options) {
         const now = Date.now();
         // 1 dakika (60000 ms) önce yönlendirilmiş sunucuları temizle
         for (const [ip, timestamp] of recentlyRedirected.entries()) {
-            if (now - timestamp > options.config.CpuReleaseUsage.CreateVmTimeout) {
+            if (now - timestamp > options.config.CpuReleaseUsage.RoutingDelay) {
                 recentlyRedirected.delete(ip);
             }
         }
@@ -66,10 +67,12 @@ function plugin(wss, options) {
                     }));
                 } else {
                     const noServerIp = server.ip;
-                    if (!recentlyRedirected.has(noServerIp)) {
+                    if ((!VmCreatedAt || VmCreatedAt < now - options.config.CpuReleaseUsage.CreateVmTimeout) && !recentlyRedirected.has(noServerIp)) {
                         options?.noServer(servers, options.config.allowedIpaddrs);
-                        recentlyRedirected.set(noServerIp, now); // noServer çağrılan IP'yi kaydet
+                        VmCreatedAt = now;
+                        recentlyRedirected.set(noServerIp, now);
                     }
+                    //Boş sunucu yok, yeni sunucu oluşturulması için zaman aşımı kontrolü
                 }
             }
         });
