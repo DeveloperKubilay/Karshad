@@ -47,7 +47,6 @@ async function createVm(status, allowedIpaddrs) {
 
     console.log("Machine creating")
 
-
     const serverConfig = config.Machines.find(z =>
         (servers.filter(y => y.serverConfig.type == z.type)?.length || 0) < z.count + 1
     );
