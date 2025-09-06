@@ -3,17 +3,19 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 async function test() {
-    const config = {
-        envPrefix: "GOOGLE_",
-        run: "./run.sh"
-    };
-    const serve = await Google.create(config);
+    const serve = await Google.create({
+        "type": "Google",
+       // "ProjectName": "false-chat",
+        "env": "env.json",
+        "template": "template.json",
+        "count": 5
+    });
     console.log(serve);
     //console.log(serve.ip);
-    setTimeout(() => {
+    /*setTimeout(() => {
         console.log("Deleting instance...");
         serve.delete()
-    }, 15 * 1000)
+    }, 15 * 1000)*/
 }
 
 

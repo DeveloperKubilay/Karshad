@@ -18,6 +18,6 @@ fastify.get('/Redirect', async (request, reply) => {
     reply.redirect(host.data?.url)
 })
 
-fastify.listen({ port: 5000, host: '0.0.0.0' }, (err) => {
+fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) throw err
 })

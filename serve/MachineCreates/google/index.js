@@ -4,11 +4,6 @@ const path = require('path');
 
 class GoogleSystem {
     constructor() {
-        const envPath = path.join(__dirname, 'machine', 'env.json');
-        const envData = JSON.parse(fs.readFileSync(envPath, 'utf8'));
-        this.projectId = envData.project_id;
-        this.zone = process.env.GOOGLE_ZONE;
-        this.client = new InstancesClient({ keyFilename: envPath });
         this.instanceName = null;
         this.publicIp = null;
     }
@@ -20,18 +15,25 @@ class GoogleSystem {
     }
 
     async createInstance(config) {
-        this.instanceName = `instance-${Date.now()}`;
+        this.instanceName = `${config.ProjectName || "instance"}-${Date.now()}`;
 
-        const templatePath = path.join(__dirname, 'machine', 'template.json');
+        const envPath = path.join(__dirname, 'machine', (config.env || 'env.json'));
+        const envData = JSON.parse(fs.readFileSync(envPath, 'utf8'));
+
+        const templatePath = path.join(__dirname, 'machine', (config.template || 'template.json'));
         const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+
+        this.projectId = envData.project_id;
+        this.zone = template.zone.split("zones/")[1];
+        this.client = new InstancesClient({ keyFilename: envPath });
 
         template.name = this.instanceName;
 
-        const runShPath = path.join(__dirname, 'run.sh');
-        let runShContent = fs.readFileSync(runShPath, 'utf8');
+        const runShPath = path.join(__dirname, (config.run || 'run.sh'));
+        let runShContent = fs.readFileSync(runShPath, 'utf8').replaceAll("\r","");
 
-        let stopShPath = path.join(__dirname, 'stop.sh');
-        let stopShContent = fs.existsSync(stopShPath) ? fs.readFileSync(stopShPath, 'utf8') : '';
+        let stopShPath = path.join(__dirname, (config.stop || 'stop.sh'));
+        let stopShContent = fs.existsSync(stopShPath) ? fs.readFileSync(stopShPath, 'utf8').replaceAll("\r","") : '';
 
         if (template.metadata && Array.isArray(template.metadata.items)) {
             template.metadata.items.push({ key: 'startup-script', value: runShContent });
@@ -76,7 +78,7 @@ class GoogleSystem {
                     }
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 10000));
+                await new Promise(resolve => setTimeout(resolve, 5000));
                 attempts++;
             } catch (error) {
                 attempts++;

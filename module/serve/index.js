@@ -23,7 +23,7 @@ function plugin(wss, options) {
         const now = Date.now();
         // 1 dakika (60000 ms) önce yönlendirilmiş sunucuları temizle
         for (const [ip, timestamp] of recentlyRedirected.entries()) {
-            if (now - timestamp > options.config.CpuReleaseUsage.redirectionTimeout) {
+            if (now - timestamp > options.config.CpuReleaseUsage.CreateVmTimeout) {
                 recentlyRedirected.delete(ip);
             }
         }

@@ -9,8 +9,7 @@
     {
       "autoDelete": true,
       "boot": true,
-      "deviceName": "instance-20250905-140948",
-      "diskEncryptionKey": {},
+      "deviceName": "instance-20250906-162301",
       "initializeParams": {
         "diskSizeGb": "10",
         "diskType": "projects/dotted-lens-470017-f5/zones/us-central1-f/diskTypes/hyperdisk-balanced",
@@ -30,19 +29,20 @@
   "instanceEncryptionKey": {},
   "keyRevocationActionType": "NONE",
   "labels": {
-    "goog-ec-src": "vm_add-rest"
+    "goog-ec-src": "vm_add-rest",
+    "created-by": "Karshard"
   },
   "machineType": "projects/dotted-lens-470017-f5/zones/us-central1-b/machineTypes/c4a-standard-1",
   "metadata": {
     "items": []
   },
-  "name": "instance-20250905-140948",
+  "name": "instance-20250906-162301",
   "networkInterfaces": [
     {
       "accessConfigs": [
         {
           "name": "External NAT",
-          "networkTier": "PREMIUM"
+          "networkTier": "STANDARD"
         }
       ],
       "nicType": "GVNIC",
@@ -58,7 +58,7 @@
   },
   "scheduling": {
     "automaticRestart": false,
-    "instanceTerminationAction": "STOP",
+    "instanceTerminationAction": "DELETE",
     "onHostMaintenance": "TERMINATE",
     "provisioningModel": "SPOT"
   },

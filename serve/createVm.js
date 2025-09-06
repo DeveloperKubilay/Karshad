@@ -4,6 +4,7 @@ const { addVm, deleteVm } = require('./Cloudflare');
 
 //Servers
 const Azure = require('./MachineCreates/azure');
+const Google = require('./MachineCreates/google');
 
 let statusRef;
 let allowedIpaddrsRef;
@@ -14,7 +15,7 @@ setInterval(() => {
     if (!statusRef) return;
     const cpuUsages = Object.entries(statusRef).map(([ip, server]) => {
         const lastStatus = server.status[server.status.length - 1];
-        if(!lastStatus) return 0;
+        if (!lastStatus) return 0;
         return Number(lastStatus.cpu) || 0;
     });
     const avgCpuUsage = cpuUsages.reduce((sum, usage) => sum + usage, 0) / cpuUsages.length;
@@ -24,7 +25,7 @@ setInterval(() => {
     const date = new Date();
     if (date.getTime() < nextDeleteTime) return; // Silme zamanı gelmediyse çık
 
-    const aServer = servers.find(z => z.time + config.CpuReleaseUsage.removeVmTimeout < date);
+    const aServer = servers.find(z => z.time + config.CpuReleaseUsage.MinVmDuration < date);
     if (!aServer) return;
 
     aServer.rule.ip = aServer.serve.ip;
@@ -46,28 +47,25 @@ async function createVm(status, allowedIpaddrs) {
     const serverConfig = config.Machines.find(z =>
         (servers.filter(y => y.serverConfig.type == z.type)?.length || 0) < z.count + 1
     );
-    
-    switch (serverConfig.type) {
-        case 'Azure':
 
-            const serve = await Azure.create(serverConfig);
+    const serve = await (
+        serverConfig.type == "Azure" ? Azure : 
+        serverConfig.type == "Google" ? Google : null
+    ).create(serverConfig);
 
-            servers.push({//Burada olmasını sebebi count'u aşmaması
-                serverConfig,
-                serve,
-                time: Date.now()
-            });
+    servers.push({//Burada olmasını sebebi count'u aşmaması
+        serverConfig,
+        serve,
+        time: Date.now()
+    });
 
-            await serve;
-            
-            serve.rule = await addVm(serve.ip, serve.resourceGroup)
-            serve.url = config.domain.replace("{server}", serve.rule.name);
-            allowedIpaddrsRef.push(serve.ip);
-            console.log(serve.url);
+    await serve;
 
+    serve.rule = await addVm(serve.ip, serve.resourceGroup)
+    serve.url = config.domain.replace("{server}", serve.rule.name);
+    allowedIpaddrsRef.push(serve.ip);
+    console.log(serve.url);
 
-            break;
-    }
 }
 
 
