@@ -1,5 +1,8 @@
+const fs = require('fs');
+
 function plugin(wss, options) {
-    
+    const logger = new (require('../log.js'))(options.log.file);
+
     var servers = {};
     const recentlyRedirected = new Map();
     let requestCounts = [];
@@ -30,7 +33,7 @@ function plugin(wss, options) {
         }
 
         const serverList = Object.entries(servers).map(([ip, server]) => {
-            if(server.ws.dashboard) return null
+            if (server.ws.dashboard) return null
             const lastStatus = server.status[server.status.length - 1];
             return {
                 ip,
@@ -89,7 +92,7 @@ function plugin(wss, options) {
             if (!attackModeActive && avgRequests > options.config.UnderAttack.minRequests && totalReqCount > avgRequests * options.config.UnderAttack.thresholdIncrease) {
                 options.cloudflare.UnderAttackMode(true);
                 attackModeActive = true;
-                console.log('Under Attack Mode activated');
+                logger.log(options.config.log.attackInfo, 'Under Attack Mode activated');
                 attackModeActivatedAt = now;
             }
         }
@@ -101,6 +104,7 @@ function plugin(wss, options) {
                 options.cloudflare.UnderAttackMode(false);
                 attackModeActive = false;
                 console.log('Under Attack Mode deactivated');
+                logger.log(options.config.log.attackInfo, 'Under Attack Mode deactivated');
                 attackModeActivatedAt = null;
             }
         }
@@ -145,10 +149,10 @@ function plugin(wss, options) {
             return;
         }
 
-        ipaddr = dashboard ? ipaddr+"-dashboard" : ipaddr;
+        ipaddr = dashboard ? ipaddr + "-dashboard" : ipaddr;
         ws.ipaddr = ipaddr;
 
-        if(servers[ipaddr]) {
+        if (servers[ipaddr]) {
             servers[ipaddr].ws?.close()
             delete servers[ipaddr]
         }

@@ -1,6 +1,7 @@
 const servers = []
 const config = require('./config.json');
 const { addVm, deleteVm } = require('./Cloudflare');
+const logger = new (require('../module/log.js'))(config.log.file);
 
 //Servers
 const Azure = require('./MachineCreates/azure');
@@ -29,8 +30,10 @@ setInterval(() => {
     if (!aServer) return;
 
     aServer.rule.ip = aServer.serve.ip;
-    deleteVm(aServer.rule);
 
+    logger.log(config.log.vmInfo, "Machine deleted", aServer.rule.ip, aServer.serve.url);
+    
+    deleteVm(aServer.rule);
     aServer.serve.delete();
     servers.splice(servers.indexOf(aServer), 1);
 
@@ -44,13 +47,16 @@ async function createVm(status, allowedIpaddrs) {
 
     console.log("Machine creating")
 
+
     const serverConfig = config.Machines.find(z =>
         (servers.filter(y => y.serverConfig.type == z.type)?.length || 0) < z.count + 1
     );
 
+    logger.log(config.log.cpuInfo, "Machine creating", serverConfig.type)
+
     const serve = await (
-        serverConfig.type == "Azure" ? Azure : 
-        serverConfig.type == "Google" ? Google : null
+        serverConfig.type == "Azure" ? Azure :
+            serverConfig.type == "Google" ? Google : null
     ).create(serverConfig);
 
     servers.push({//Burada olmasını sebebi count'u aşmaması
@@ -64,6 +70,7 @@ async function createVm(status, allowedIpaddrs) {
     serve.rule = await addVm(serve.ip, serve.resourceGroup)
     serve.url = config.domain.replace("{server}", serve.rule.name);
     allowedIpaddrsRef.push(serve.ip);
+    logger.log(config.log.vmInfo, "Machine created", serve.ip, serve.url);
     console.log(serve.url);
 
 }

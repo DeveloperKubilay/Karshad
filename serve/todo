@@ -1,8 +1,6 @@
 MinVmDuration 5dk
 CreateVmTimeout 30sn
 nextRemoveVmTimeout 2dk
-ort * 0,25
 
 CpuReleaseUsage dene
-
-loglama yapmıyor
+loglamayı dene
