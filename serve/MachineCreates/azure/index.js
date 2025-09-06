@@ -31,7 +31,7 @@ class AzureSystem {
         this.clientSecret = process.env[`${prefix}CLIENT_SECRET`];
         this.location = config.location || process.env[`${prefix}LOCATION`] || 'francecentral';
         this.machineType = config.machineType || 'Standard_B2pts_v2';
-        this.runScriptPath = config.run;
+        this.runScriptPath = config.run || 'run.sh';
     }
 
     async getAccessToken() {

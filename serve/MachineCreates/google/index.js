@@ -46,8 +46,6 @@ class GoogleSystem {
             instanceResource: template,
         });
 
-        console.log('VM oluşturuluyor...');
-
         await this.waitForInstance();
 
         return {

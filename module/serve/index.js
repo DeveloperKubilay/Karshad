@@ -1,4 +1,5 @@
 function plugin(wss, options) {
+    
     var servers = {};
     const recentlyRedirected = new Map();
     let requestCounts = [];
@@ -86,8 +87,9 @@ function plugin(wss, options) {
         if (requestCounts.length === 200) {
             const avgRequests = requestCounts.reduce((sum, count) => sum + count, 0) / requestCounts.length;
             if (!attackModeActive && avgRequests > options.config.UnderAttack.minRequests && totalReqCount > avgRequests * options.config.UnderAttack.thresholdIncrease) {
-                options.cloudflare.attackMode(true);
+                options.cloudflare.UnderAttackMode(true);
                 attackModeActive = true;
+                console.log('Under Attack Mode activated');
                 attackModeActivatedAt = now;
             }
         }
@@ -96,8 +98,9 @@ function plugin(wss, options) {
         if (attackModeActive && attackModeActivatedAt && (now - attackModeActivatedAt > options.config.UnderAttack.minDuration)) { // Süre geçti mi?
             const avgRequests = requestCounts.reduce((sum, count) => sum + count, 0) / requestCounts.length;
             if (totalReqCount <= avgRequests * options.config.UnderAttack.thresholdDecrease) {
-                options.cloudflare.attackMode(false);
+                options.cloudflare.UnderAttackMode(false);
                 attackModeActive = false;
+                console.log('Under Attack Mode deactivated');
                 attackModeActivatedAt = null;
             }
         }

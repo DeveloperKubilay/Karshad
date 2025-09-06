@@ -1,29 +1,34 @@
 {
-   "Machines": [
-       {
-           "type": "Google",
-           "ProjectName": "false-chat",
-           "env": "env.json",
-           "template": "template.json",
-           "count": 5
-       }
-   ],
-   "CpuReleaseUsage":{
-       "min": 10,
-       "max": 30,
-       "MinVmDuration": 300000000000,
-       "CreateVmTimeout": 900000000,
-       "nextRemoveVmTimeout": 30000
-   },
-   "allowedIpaddrs": [
-       "127.0.0.1",
-       "::1"
-   ],
-   "domain":"http://{server}.tmaldergi.com",
-   "UnderAttack": {
-       "thresholdIncrease": 3.0,
-       "thresholdDecrease": 1.3,
-       "minRequests": 100,
-       "minDuration": 300000
-   }
+    "Machines": [
+        {
+            "type": "Azure",
+            "envPrefix": "AZURE_",
+            "count": 5
+        },
+        {
+            "type": "Google",
+            "ProjectName": "false-chat",
+            "env": "env.json",
+            "template": "template.json",
+            "count": 5
+        }
+    ],
+    "CpuReleaseUsage": {
+        "min": 45,
+        "max": 90,
+        "MinVmDuration": 300000000000,
+        "CreateVmTimeout": 900000000,
+        "nextRemoveVmTimeout": 30000
+    },
+    "allowedIpaddrs": [
+        "127.0.0.1",
+        "::1"
+    ],
+    "domain": "http://{server}.tmaldergi.com",
+    "UnderAttack": {
+        "thresholdIncrease": 4.0,
+        "thresholdDecrease": 1.3,
+        "minRequests": 100,
+        "minDuration": 300000
+    }
 }

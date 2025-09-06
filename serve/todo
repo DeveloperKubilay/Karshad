@@ -1,9 +1,8 @@
-template.jsondan ssh kaldır
+MinVmDuration 5dk
+CreateVmTimeout 30sn
+nextRemoveVmTimeout 2dk
+ort * 0,25
 
+CpuReleaseUsage dene
 
-config.jsondan
-
-"max": 20,
-"MinVmDuration": 300000000000,
-"CreateVmTimeout": 900000000,
-"nextRemoveVmTimeout": 30000
+loglama yapmıyor
