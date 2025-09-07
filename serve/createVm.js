@@ -34,7 +34,17 @@ setInterval(() => {
 
     deleteVm(aServer.serve.rule);
     aServer.serve.delete();
+    if (allowedIpaddrsRef) {
+        const index = allowedIpaddrsRef.findIndex(z => z.ip === aServer.serve.ip);
+        if (index !== -1) allowedIpaddrsRef.splice(index, 1);
+    }
     servers.splice(servers.indexOf(aServer), 1);
+
+    console.log(
+        "debug",
+        servers,
+        allowedIpaddrsRef
+    )
 
     nextDeleteTime = date + config.CpuReleaseUsage.nextRemoveVmTimeout; // Yeni silme zamanı ayarla
 }, 1000)
@@ -67,7 +77,10 @@ async function createVm(status, allowedIpaddrs) {
 
     serve.rule = await addVm(serve.ip, serve.resourceGroup)
     serve.url = config.domain.replace("{server}", serve.rule.name);
-    allowedIpaddrsRef.push(serve.ip);
+    allowedIpaddrsRef.push({
+        ip: serve.ip,
+        url: serve.url
+    });
     logg.log(config.log.vmInfo, "Machine created", serve.ip, serve.url);
     console.log("Machine created", serve.ip, serve.url);
 

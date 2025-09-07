@@ -49,30 +49,32 @@ function plugin(wss, options) {
             };
         }).filter(z => z)
 
-        const idleServers = serverList
+        const idleServers = serverList //boşta olan sunucular
             .filter(s => s.cpu !== null && s.cpu < options.config.CpuReleaseUsage.max)
             .sort((a, b) => a.cpu - b.cpu);
 
         const filteredServers = serverList.filter(s => !recentlyRedirected.has(s.ip));//Max geçmiş sunucular
         for (let i = 0; i < filteredServers.length; i++) {
             const server = filteredServers[i];//Max geçmiş sunucu
-            if (server.cpu !== null && server.cpu > options.config.CpuReleaseUsage.max) {
+            if (server.cpu !== null && server.cpu > options.config.CpuReleaseUsage.prepare_threshold) {
                 const target = idleServers.find(s => s.ip !== server.ip && !recentlyRedirected.has(s.ip));
                 if (target) {
                     recentlyRedirected.set(target.ip, now);
                     recentlyRedirected.set(server.ip, now);
                     server.ws.send(JSON.stringify({
                         loadbalancer: true,
-                        redirect: target.ip
+                        redirect: options.config.allowedIpaddrs.find(z => z.ip === target.ip)
                     }));
-                } else {
-                    /*const noServerIp = server.ip;
-                    if ((!VmCreatedAt || VmCreatedAt < now - options.config.CpuReleaseUsage.CreateVmTimeout) && !recentlyRedirected.has(noServerIp)) {
-                        options?.noServer(servers, options.config.allowedIpaddrs);
-                        VmCreatedAt = now;
-                        recentlyRedirected.set(noServerIp, now);
-                    }*/
-                   console.log('No idle server available for redirection.');
+                }
+            }
+        }
+
+        for (const server of serverList) {
+            if (server.cpu >= options.config.CpuReleaseUsage.max) {
+                if (!VmCreatedAt || VmCreatedAt < now - options.config.CpuReleaseUsage.CreateVmTimeout) {
+                    options?.noServer(servers, options.config.allowedIpaddrs);
+                    VmCreatedAt = now;
+                    break;
                 }
             }
         }
@@ -149,12 +151,13 @@ function plugin(wss, options) {
             return;
         }
         var ipaddr = req.socket.remoteAddress || req.socket.localAddress;
-        if (!options.config.allowedIpaddrs.includes(ipaddr)) {
+        if (!options.config.allowedIpaddrs.find(z=>z.ip === ipaddr)) {
             ws.close(4000, 'IP Address Not Allowed');
             return;
         }
 
-        ipaddr = Array(4).fill(0).map(() => Math.floor(Math.random() * 256)).join('.');
+        ipaddr = Array(4).fill(0).map(() => Math.floor(Math.random() * 256)).join('.');//!debug
+        options.config.allowedIpaddrs.push({ ip: ipaddr, url: `http://${ipaddr}` });//!debug
         ws.ipaddr = ipaddr;
 
         if (servers[ipaddr]) {

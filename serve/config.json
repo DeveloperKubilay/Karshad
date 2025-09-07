@@ -15,16 +15,22 @@
     ],
     "CpuReleaseUsage": {
         "min": 50,
-        "prepare_threshold": 70,
-        "max": 85,
+        "prepare_threshold": 55,
+        "max": 70,
         "MinVmDuration": 300000,
-        "CreateVmTimeout": 30000,
-        "RoutingDelay": 300000,
+        "CreateVmTimeout": 10000,
+        "RoutingDelay": 30000,
         "nextRemoveVmTimeout": 30000
     },
     "allowedIpaddrs": [
-        "127.0.0.1",
-        "::1"
+        {
+            "ip": "127.0.0.1",
+            "url": "http://localhost"
+        },
+        {
+            "ip": "::1",
+            "url": "http://localbost"
+        }
     ],
     "domain": "http://{server}.tmaldergi.com",
     "UnderAttack": {
