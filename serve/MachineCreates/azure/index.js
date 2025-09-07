@@ -50,7 +50,7 @@ class AzureSystem {
 
     generateResourceGroupName() {
         const groupId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        this.resourceGroupName = `Karshad-${groupId}`;
+        this.resourceGroupName = `Karshard-${groupId}`;
         return this.resourceGroupName;
     }
 
@@ -125,7 +125,7 @@ ${runScript.split('\n').map(line => '      ' + line).join('\n')}
     }
 
     async getPublicIP() {
-        const url = `https://management.azure.com/subscriptions/${this.subscriptionId}/resourceGroups/${this.resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/Karshad-ip?api-version=2021-04-01`;
+        const url = `https://management.azure.com/subscriptions/${this.subscriptionId}/resourceGroups/${this.resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/Karshard-ip?api-version=2021-04-01`;
 
         try {
             const response = await axios.get(url, {

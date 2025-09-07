@@ -15,10 +15,11 @@
     ],
     "CpuReleaseUsage": {
         "min": 50,
-        "max": 80,
+        "prepare_threshold": 70,
+        "max": 85,
         "MinVmDuration": 300000,
         "CreateVmTimeout": 30000,
-        "RoutingDelay": 2000,
+        "RoutingDelay": 300000,
         "nextRemoveVmTimeout": 30000
     },
     "allowedIpaddrs": [

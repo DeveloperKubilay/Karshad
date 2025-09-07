@@ -1,10 +1,10 @@
-# Karshad 🧠🔥
+# Karshard 🧠🔥
 
 > Next-level load balancer & server orchestrator for Gen Z devs. Real-time dashboard, auto-scaling, Cloudflare & Azure integration. No cap, this is cloud game on hard mode. 
 
-## 🚀 What is Karshad?
+## 🚀 What is Karshard?
 
-Karshad is a real-time, modular load balancer and server manager. It auto-scales VMs on Azure, manages DNS & firewall with Cloudflare, and gives you a live dashboard to flex your infra stats. All coded with Fastify, WebSocket, and pure Node.js vibes.
+Karshard is a real-time, modular load balancer and server manager. It auto-scales VMs on Azure, manages DNS & firewall with Cloudflare, and gives you a live dashboard to flex your infra stats. All coded with Fastify, WebSocket, and pure Node.js vibes.
 
 ## 🛠️ Features
 

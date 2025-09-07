@@ -6,7 +6,7 @@
             "value": "placeholder"
         },
         "virtualMachineName": {
-            "value": "Karshad"
+            "value": "Karshard"
         },
         "virtualMachineSize": {
             "value": "placeholder"
@@ -18,16 +18,16 @@
             "value": "placeholder"
         },
         "virtualNetworkName": {
-            "value": "Karshad-vnet"
+            "value": "Karshard-vnet"
         },
         "networkSecurityGroupName": {
-            "value": "Karshad-nsg"
+            "value": "Karshard-nsg"
         },
         "publicIpAddressName": {
-            "value": "Karshad-ip"
+            "value": "Karshard-ip"
         },
         "networkInterfaceName": {
-            "value": "karshad391"
+            "value": "Karshard391"
         }
     }
 }

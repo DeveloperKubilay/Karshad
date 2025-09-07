@@ -15,7 +15,9 @@ function plugin(fastify, opts, done) {
         });
 
         ws.on('message', (data) => {
-            console.log(data.toString());
+            const json = JSON.parse(data.toString());
+            if (!json.loadbalancer) return;
+            if (json.redirect) opts.redirect(json.redirect);
         });
 
         ws.on('close', (code, reason) => {
@@ -24,7 +26,6 @@ function plugin(fastify, opts, done) {
         });
 
         ws.on('error', (error) => {
-            console.error('WebSocket hatası:', error);
         });
     }
 
@@ -62,27 +63,27 @@ function plugin(fastify, opts, done) {
         };
     });
 
-     const interval = setInterval(async () => {
-         let cpu = await si.currentLoad();
-         let mem = await si.mem();
- 
-         cpu = cpu.currentLoad.toFixed(2);
-         mem = ((mem.active / mem.total) * 100).toFixed(2);
+    const interval = setInterval(async () => {
+        let cpu = await si.currentLoad();
+        let mem = await si.mem();
+
+        cpu = cpu.currentLoad.toFixed(2);
+        mem = ((mem.active / mem.total) * 100).toFixed(2);
 
 
-         ws?.send(JSON.stringify({
+        ws?.send(JSON.stringify({
             loadbalancer: true,
             cpu: cpu,
             mem: mem,
             reqBytes: reqBytes,
             resBytes: resBytes,
             reqCount: reqCount
-         }));
- 
-         reqCount = 0;
-         reqBytes = 0;
-         resBytes = 0;
-     }, 5000);
+        }));
+
+        reqCount = 0;
+        reqBytes = 0;
+        resBytes = 0;
+    }, 5000);
 
     fastify.addHook('onClose', async () => {
         clearInterval(interval);

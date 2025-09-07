@@ -2,4 +2,13 @@ MinVmDuration 5dk
 CreateVmTimeout 30sn
 nextRemoveVmTimeout 2dk
 
-CreateVmTimeout ve nextRemoveVmTimeout dene
+nextRemoveVmTimeout ve RoutingDelay dene
+
+
+RoutingDelay tam denenmedi
+
+
+
+ip adres yönlendiriyor
+{ loadbalancer: true, redirect: '137.13.162.123' }
+Redirect to: 137.13.162.123

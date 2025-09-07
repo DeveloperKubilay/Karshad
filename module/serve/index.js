@@ -53,29 +53,29 @@ function plugin(wss, options) {
             .filter(s => s.cpu !== null && s.cpu < options.config.CpuReleaseUsage.max)
             .sort((a, b) => a.cpu - b.cpu);
 
-        const usedIdleServers = new Set();
-
-        serverList.filter(s => !recentlyRedirected.has(s.ip)).forEach(server => {
+        const filteredServers = serverList.filter(s => !recentlyRedirected.has(s.ip));//Max geçmiş sunucular
+        for (let i = 0; i < filteredServers.length; i++) {
+            const server = filteredServers[i];//Max geçmiş sunucu
             if (server.cpu !== null && server.cpu > options.config.CpuReleaseUsage.max) {
-                const target = idleServers.find(s => s.ip !== server.ip && !usedIdleServers.has(s.ip));
+                const target = idleServers.find(s => s.ip !== server.ip && !recentlyRedirected.has(s.ip));
                 if (target) {
-                    usedIdleServers.set(target.ip, true);
-                    recentlyRedirected.set(target.ip, now); // Yönlendirme zamanını kaydet
+                    recentlyRedirected.set(target.ip, now);
+                    recentlyRedirected.set(server.ip, now);
                     server.ws.send(JSON.stringify({
                         loadbalancer: true,
                         redirect: target.ip
                     }));
                 } else {
-                    const noServerIp = server.ip;
+                    /*const noServerIp = server.ip;
                     if ((!VmCreatedAt || VmCreatedAt < now - options.config.CpuReleaseUsage.CreateVmTimeout) && !recentlyRedirected.has(noServerIp)) {
                         options?.noServer(servers, options.config.allowedIpaddrs);
                         VmCreatedAt = now;
                         recentlyRedirected.set(noServerIp, now);
-                    }
-                    //Boş sunucu yok, yeni sunucu oluşturulması için zaman aşımı kontrolü
+                    }*/
+                   console.log('No idle server available for redirection.');
                 }
             }
-        });
+        }
 
         // Ortalama CPU, RAM, istek sayısı, alınan ve gönderilen KB bilgilerini hesapla
         const avgCpu = serverList.length > 0 ?
@@ -154,7 +154,7 @@ function plugin(wss, options) {
             return;
         }
 
-        ipaddr = dashboard ? ipaddr + "-dashboard" : ipaddr;
+        ipaddr = Array(4).fill(0).map(() => Math.floor(Math.random() * 256)).join('.');
         ws.ipaddr = ipaddr;
 
         if (servers[ipaddr]) {
