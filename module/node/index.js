@@ -1,7 +1,6 @@
 const si = require('systeminformation');
 const WebSocket = require('ws');
 
-
 function plugin(fastify, opts, done) {
     let ws;
     let reconnectTimeout = null;
@@ -10,7 +9,7 @@ function plugin(fastify, opts, done) {
         ws = new WebSocket(`${opts.url}/?token=${opts.token}`);
 
         ws.on('open', () => {
-            console.log('WebSocket bağlantısı kuruldu.');
+            if (opts.log) console.log('WebSocket bağlantısı kuruldu.');
         });
 
         ws.on('message', (data) => {

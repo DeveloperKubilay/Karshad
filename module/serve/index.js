@@ -195,16 +195,14 @@ function plugin(wss, options) {
                     servers[ipaddr].status.shift();
                 }
                 servers[ipaddr].status.push(obj);
-            } catch (e) {
-                //    console.log('Received data is not JSON:', data.toString());
-            }
+            } catch (e) {}
         });
 
         ws.on('error', (error) => {
         });
 
         ws.on('close', (code, reason) => {
-            delete servers[ipaddr]; // servers'ı doğru şekilde güncelle
+            delete servers[ipaddr]; 
         });
 
     });

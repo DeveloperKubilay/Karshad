@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const WebSocket = require('ws');
 let ws;
 
-module.exports = {//lastServer değiştiğinde ilk değişinde connteecd adına yolla
+module.exports = {
     event: new EventEmitter(),
     data: null,
     startEvent: function (url, token, options = {}) {
@@ -14,7 +14,7 @@ function connectWebSocket(url, token, options, context) {
     ws = new WebSocket(`${url}/?token=${token}&host=true`);
 
     ws.on('open', () => {
-        console.log('WebSocket bağlantısı kuruldu.');
+        if (options.log) console.log('WebSocket bağlantısı kuruldu.');
     });
 
     ws.on('message', (data) => {
