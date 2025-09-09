@@ -18,7 +18,7 @@
     "cloudflare"
   ],
   "author": "DeveloperKubilay",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "description": "Karshard: Fastify + System Information API with Load Balancer support for GCP, Azure, and Cloudflare. More info: https://github.com/DeveloperKubilay/Karshard",
   "repository": {
     "type": "git",

@@ -57,6 +57,7 @@ async function createVm(status, allowedIpaddrs) {
         (servers.filter(y => y.serverConfig.type == z.type)?.length || 0) < z.count + 1
     );
 
+    if (!serverConfig) return;
     logg.log(config.log.cpuInfo, "Machine creating", serverConfig.type)
 
     const serve = await serverTypes[serverConfig.type].create(serverConfig);
