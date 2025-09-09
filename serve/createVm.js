@@ -2,11 +2,14 @@ const servers = []
 const config = require('./config.json');
 const { addVm, deleteVm } = require('./Cloudflare');
 const logger = require('../module/log.js')
+const fs = require('fs');
 const logg = new logger(config.log.file);
 
 //Servers
-const Azure = require('./MachineCreates/azure');
-const Google = require('./MachineCreates/google');
+const serverTypes = {};
+fs.readdirSync('./serve/MachineCreates').forEach(folder => {
+    serverTypes[folder] = require(`./MachineCreates/${folder}`);
+})
 
 let statusRef;
 let allowedIpaddrsRef;
@@ -62,10 +65,7 @@ async function createVm(status, allowedIpaddrs) {
 
     logg.log(config.log.cpuInfo, "Machine creating", serverConfig.type)
 
-    const serve = await (
-        serverConfig.type == "Azure" ? Azure :
-            serverConfig.type == "Google" ? Google : null
-    ).create(serverConfig);
+    const serve = await serverTypes[serverConfig.type].create(serverConfig);
 
     servers.push({//Burada olmasını sebebi count'u aşmaması
         serverConfig,

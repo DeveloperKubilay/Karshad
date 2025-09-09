@@ -10,6 +10,7 @@ module.exports = class {
         fs.appendFileSync(this.logFile, `${new Date().toISOString()} - ${message.join(' ')}\n`);
     }
     newSession() {
+        if (!this.logFile) return;
         fs.appendFileSync(this.logFile, `\n\n${new Date().toISOString()} - New session started\n`);
     }
 }

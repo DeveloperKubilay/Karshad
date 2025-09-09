@@ -2,7 +2,8 @@ MinVmDuration 5dk
 CreateVmTimeout 30sn
 nextRemoveVmTimeout 2dk
 
-nextRemoveVmTimeout
-*ip adres yönlendiriyor
 host şeyine hiç bakmıon o doğru diyormuki
+-normal bak
+-yönlendirilmiş bak
+-yeni makine acılmış bak
 debuglara bak

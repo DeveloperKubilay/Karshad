@@ -72,7 +72,7 @@ function plugin(wss, options) {
         for (const server of serverList) {
             if (server.cpu >= options.config.CpuReleaseUsage.max) {
                 if (!VmCreatedAt || VmCreatedAt < now - options.config.CpuReleaseUsage.CreateVmTimeout) {
-                    options?.noServer(servers, options.config.allowedIpaddrs);
+                    options?.createVm(servers, options.config.allowedIpaddrs);
                     VmCreatedAt = now;
                     break;
                 }

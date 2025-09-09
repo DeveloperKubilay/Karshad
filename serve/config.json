@@ -16,7 +16,7 @@
     "CpuReleaseUsage": {
         "min": 50,
         "prepare_threshold": 55,
-        "max": 70,
+        "max": 95,
         "MinVmDuration": 300000,
         "CreateVmTimeout": 10000,
         "RoutingDelay": 30000,

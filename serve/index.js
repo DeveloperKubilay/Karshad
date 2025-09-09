@@ -1,7 +1,7 @@
 const fastify = require('fastify')()
 require('dotenv').config();
 const { serve } = require('../module')
-const WebSocket  = require('ws')
+const WebSocket = require('ws')
 const createVm = require('./createVm')
 const cloudflare = require('./Cloudflare')
 const path = require('path')
@@ -10,25 +10,21 @@ const config = require('./config.json');
 
 const wss = new WebSocket.Server({ server: fastify.server });
 
+
+//dashboard
+const dashboardHtml = fs.readFileSync(path.join(__dirname, 'dashboard.html'), 'utf8')
+const htmlWithToken = dashboardHtml.replace(
+    'your_token',
+    process.env.WS_TOKEN
+)
 fastify.get('/', async (request, reply) => {
-    try {
-        const dashboardHtml = fs.readFileSync(path.join(__dirname, 'dashboard.html'), 'utf8')
-        
-        const htmlWithToken = dashboardHtml.replace(
-            'your_token', 
-            process.env.WS_TOKEN
-        )
-        
-        reply.type('text/html').send(htmlWithToken)
-    } catch (error) {
-        reply.code(500).send({ error: 'Dashboard dosyası bulunamadı' })
-    }
+    reply.type('text/html').send(htmlWithToken)
 })
 
 
 serve(wss, {
     token: process.env.WS_TOKEN,
-    noServer: createVm,
+    createVm: createVm,
     cloudflare: cloudflare,
     config: config
 })
