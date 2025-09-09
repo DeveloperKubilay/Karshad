@@ -7,7 +7,7 @@ const logg = new logger(config.log.file);
 
 //Servers
 const serverTypes = {};
-fs.readdirSync('./serve/MachineCreates').forEach(folder => {
+fs.readdirSync('./MachineCreates').forEach(folder => {
     serverTypes[folder] = require(`./MachineCreates/${folder}`);
 })
 
@@ -42,12 +42,6 @@ setInterval(() => {
         if (index !== -1) allowedIpaddrsRef.splice(index, 1);
     }
     servers.splice(servers.indexOf(aServer), 1);
-
-    console.log(
-        "debug",
-        servers,
-        allowedIpaddrsRef
-    )
 
     nextDeleteTime = date + config.CpuReleaseUsage.nextRemoveVmTimeout; // Yeni silme zamanı ayarla
 }, 1000)

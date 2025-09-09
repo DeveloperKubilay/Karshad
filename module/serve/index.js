@@ -12,13 +12,14 @@ function plugin(wss, options) {
     let attackModeActive = false;
     let attackModeActivatedAt = null;
 
-    function broadcastToDashboard(data) {
+    function broadcastToDashboard(type, data) {
         wss.clients.forEach(client => {
-            if (!client.dashboard) return;
+            if (!client[type]) return;
             if (client.readyState === 1) {
                 try {
                     client.send(JSON.stringify({
-                        dashboard: true,
+                        [type]: true,
+                        loadbalancer: true,
                         ...data
                     }));
                 } catch (e) { }
@@ -26,9 +27,10 @@ function plugin(wss, options) {
         });
     }
 
+
     setInterval(() => {
         const now = Date.now();
-        // 1 dakika (60000 ms) önce yönlendirilmiş sunucuları temizle
+        // yönlendirilmiş sunucuları temizle
         for (const [ip, timestamp] of recentlyRedirected.entries()) {
             if (now - timestamp > options.config.CpuReleaseUsage.RoutingDelay) {
                 recentlyRedirected.delete(ip);
@@ -36,7 +38,8 @@ function plugin(wss, options) {
         }
 
         const serverList = Object.entries(servers).map(([ip, server]) => {
-            if (server.ws.dashboard) return null
+            if (server.ws.dashboard) return null;
+            if (server.ws.host) return null;
             const lastStatus = server.status[server.status.length - 1];
             return {
                 ip,
@@ -68,6 +71,15 @@ function plugin(wss, options) {
                 }
             }
         }
+
+        const nowIdleServers = (idleServers.find(s => !recentlyRedirected.has(s.ip)) || idleServers[0])?.ip;
+        if (nowIdleServers) {
+            broadcastToDashboard("host", {
+                ip: nowIdleServers,
+                url: options.config.allowedIpaddrs.find(z => z.ip === nowIdleServers)?.url
+            });
+        }
+
 
         for (const server of serverList) {
             if (server.cpu >= options.config.CpuReleaseUsage.max) {
@@ -117,7 +129,7 @@ function plugin(wss, options) {
         }
 
 
-        broadcastToDashboard({
+        broadcastToDashboard("dashboard", {
             serverCount: serverList.length,
             avgCpu: avgCpu,
             avgMem: avgMem,
@@ -133,10 +145,10 @@ function plugin(wss, options) {
                 resBytes: s.resBytes
             }))
         });
-    }, 1000);
+    }, options.Interval || 1000);
 
     wss.on('connection', async (ws, req) => {
-        console.log('WebSocket bağlantısı kuruldu.');
+        if(options.config.log.debug) console.log('WebSocket bağlantısı kuruldu.');
         if (!req.url) {
             ws.close(4000, 'No URL');
             return;
@@ -145,19 +157,23 @@ function plugin(wss, options) {
         const urlParams = new URLSearchParams(req.url.slice(req.url.indexOf('?') + 1));
         const token = urlParams.get('token');
         const dashboard = urlParams.get('dashboard');
+        const host = urlParams.get('host');
         if (dashboard) ws.dashboard = true;
+        if (host) ws.host = true;
         if (token !== options.token) {
             ws.close(4000, 'Invalid Token');
             return;
         }
         var ipaddr = req.socket.remoteAddress || req.socket.localAddress;
-        if (!options.config.allowedIpaddrs.find(z=>z.ip === ipaddr)) {
+        if (!options.config.allowedIpaddrs.find(z => z.ip === ipaddr)) {
             ws.close(4000, 'IP Address Not Allowed');
             return;
         }
 
-        ipaddr = Array(4).fill(0).map(() => Math.floor(Math.random() * 256)).join('.');//!debug
-        options.config.allowedIpaddrs.push({ ip: ipaddr, url: `http://${ipaddr}` });//!debug
+        if (process.env.KARSHARD_DEVMODE) {
+            ipaddr = Array(4).fill(0).map(() => Math.floor(Math.random() * 256)).join('.');
+            options.config.allowedIpaddrs.push({ ip: ipaddr, url: `http://${ipaddr}` });
+        }
         ws.ipaddr = ipaddr;
 
         if (servers[ipaddr]) {

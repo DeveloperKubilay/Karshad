@@ -11,7 +11,6 @@ function plugin(fastify, opts, done) {
 
         ws.on('open', () => {
             console.log('WebSocket bağlantısı kuruldu.');
-            ws.send(JSON.stringify({ message: 'Merhaba sunucu!' }));
         });
 
         ws.on('message', (data) => {
@@ -21,7 +20,7 @@ function plugin(fastify, opts, done) {
         });
 
         ws.on('close', (code, reason) => {
-            console.log(`Bağlantı kapandı. Kod: ${code}, Sebep: ${reason}`);
+            if (opts.log) console.log(`Connection closed. Code: ${code}, Reason: ${reason}`);
             reconnectTimeout = setTimeout(connectWebSocket, 2000);
         });
 
@@ -83,7 +82,7 @@ function plugin(fastify, opts, done) {
         reqCount = 0;
         reqBytes = 0;
         resBytes = 0;
-    }, 5000);
+    }, opts.Interval || 5000);
 
     fastify.addHook('onClose', async () => {
         clearInterval(interval);

@@ -1,13 +1,12 @@
 const fastify = require('fastify')()
-const cors = require('@fastify/cors')
 const { host } = require('../module')
+require('dotenv').config()
 
-fastify.register(cors, {
-    origin: 'http://localhost:5173'
-})
-
+host.startEvent(process.env.WS_URL, process.env.TOKEN);
 host.event.on("change", (data) => {
     console.log("Host data changed:", data)
+    //data
+    //{ url: 'http://147.69.131.113' }
 })
 
 fastify.get('/Status', async (request, reply) => {
@@ -18,6 +17,9 @@ fastify.get('/Redirect', async (request, reply) => {
     reply.redirect(host.data?.url)
 })
 
-fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
-    if (err) throw err
+host.event.on("connected", (data) => {
+    console.log("Host started 0.0.0.0:3000")
+    fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
+        if (err) throw err
+    })
 })

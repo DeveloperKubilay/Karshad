@@ -73,6 +73,7 @@
             background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
             border-radius: 24px;
             border: 1px solid var(--border-primary);
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             position: relative;
             overflow: hidden;
@@ -146,6 +147,7 @@
         
         .card {
             background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 28px;
@@ -155,7 +157,8 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease; /* Daha hızlı transition */
+            will-change: transform; /* GPU optimizasyonu */
         }
         
         .card::before {
@@ -170,9 +173,9 @@
         }
         
         .card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-2px); /* Daha az hareket */
             box-shadow: 
-                0 32px 64px rgba(0, 0, 0, 0.4),
+                0 24px 48px rgba(0, 0, 0, 0.35),
                 0 0 0 1px var(--border-secondary),
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
@@ -200,7 +203,8 @@
             border: 1px solid var(--border-primary);
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease; /* Hızlandır */
+            will-change: transform;
         }
         
         .stat-item::before {
@@ -242,6 +246,15 @@
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+        
+        .stat-label a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+        
+        .stat-label a:hover {
+            text-decoration: underline;
         }
         
         .chart-container {
@@ -290,7 +303,8 @@
             padding: 20px;
             border: 1px solid var(--border-primary);
             position: relative;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease; /* Hızlandır */
+            will-change: transform;
         }
         
         .server-item::before {
@@ -355,7 +369,7 @@
         .progress-fill {
             height: 100%;
             border-radius: 6px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.4s ease; /* Daha hızlı */
             position: relative;
         }
         
@@ -378,6 +392,7 @@
             font-weight: 600;
             font-size: 0.9rem;
             z-index: 1000;
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-primary);
             transition: all 0.3s ease;
@@ -528,8 +543,8 @@
             </div>
             <div class="card">
                 <div class="stat-item">
-                    <span class="stat-value" id="systemUptime">⏱️ Sistem Çalışma Süresi</span>
-                    <span class="stat-label" id="uptimeValue">Hesaplanıyor...</span>
+                    <span class="stat-value">🔗 GitHub</span>
+                    <span class="stat-label"><a href="https://github.com/DeveloperKubilay/Karshard" target="_blank" rel="noopener">DeveloperKubilay tarafından geliştirildi</a></span>
                 </div>
             </div>
         </div>
@@ -550,6 +565,7 @@
         let timeLabels = [];
         
         // WebSocket bağlantısı kurma fonksiyonu
+        let updateThrottle = false;
         connectWebSocket()
         function connectWebSocket() {
             try {
@@ -585,10 +601,13 @@
                 ws.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
-                        console.log('Gelen veri:', data);
                         
-                        // Dashboard verisini doğrudan kullan
-                        updateDashboard(data);
+                        // Throttle güncellemeleri - saniyede max 2 güncelleme
+                        if (!updateThrottle) {
+                            updateThrottle = true;
+                            setTimeout(() => { updateThrottle = false; }, 500);
+                            updateDashboard(data);
+                        }
                     } catch (e) {
                         console.error('WebSocket mesaj hatası:', e);
                     }
@@ -688,7 +707,12 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 0 // Animasyonu kapat
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest'
                 },
                 plugins: {
                     legend: {
@@ -704,18 +728,21 @@
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(22, 22, 22, 0.95)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#a1a1aa',
-                        borderColor: '#3f3f46',
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#00d9ff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#00d9ff',
                         borderWidth: 1,
                         cornerRadius: 8,
-                        titleFont: {
-                            family: 'Inter',
-                            weight: '600'
-                        },
-                        bodyFont: {
-                            family: 'Inter'
+                        displayColors: false,
+                        callbacks: {
+                            title: function(context) {
+                                return 'Zaman: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return 'İstek Sayısı: ' + context.parsed.y.toLocaleString();
+                            }
                         }
                     }
                 },
@@ -727,12 +754,10 @@
                                 family: 'Inter',
                                 size: 10
                             },
-                            maxTicksLimit: 10 // X ekseni etiket sayısını sınırla
+                            maxTicksLimit: 6 // Daha az etiket
                         },
                         grid: {
-                            color: 'rgba(63, 63, 70, 0.2)',
-                            drawBorder: false,
-                            lineWidth: 1
+                            display: false // Grid'i kapat
                         }
                     },
                     y: {
@@ -741,26 +766,27 @@
                             font: {
                                 family: 'Inter',
                                 size: 10
-                            }
+                            },
+                            maxTicksLimit: 5
                         },
                         grid: {
-                            color: 'rgba(63, 63, 70, 0.2)',
+                            color: 'rgba(63, 63, 70, 0.1)',
                             drawBorder: false,
                             lineWidth: 1
                         }
                     }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
                 },
                 elements: {
                     line: {
                         tension: 0.3
                     },
                     point: {
-                        hoverRadius: 4,
-                        hitRadius: 4
+                        radius: 3,
+                        hoverRadius: 6,
+                        hitRadius: 10,
+                        backgroundColor: '#00d9ff',
+                        borderColor: '#ffffff',
+                        borderWidth: 2
                     }
                 }
             }
@@ -784,17 +810,41 @@
             },
             options: {
                 responsive: false,
-                animation: { duration: 0 },
+                animation: { 
+                    duration: 800,
+                    easing: 'easeInOutQuart'
+                },
                 plugins: { 
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: { 
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#f59e0b',
+                        bodyColor: '#ffffff',
+                        borderColor: '#f59e0b',
+                        borderWidth: 1,
+                        cornerRadius: 6,
+                        callbacks: {
+                            title: function(context) {
+                                return 'CPU Kullanımı';
+                            },
+                            label: function(context) {
+                                return context.parsed.y.toFixed(1) + '%';
+                            }
+                        }
+                    }
                 },
                 scales: {
                     x: { display: false },
                     y: { display: false, min: 0, max: 100 }
                 },
                 elements: {
-                    line: { tension: 0.3 }
+                    line: { tension: 0.3 },
+                    point: {
+                        radius: 0,
+                        hoverRadius: 4,
+                        hitRadius: 8
+                    }
                 }
             }
         });
@@ -817,48 +867,83 @@
             },
             options: {
                 responsive: false,
-                animation: { duration: 0 },
+                animation: { 
+                    duration: 800,
+                    easing: 'easeInOutQuart'
+                },
                 plugins: { 
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: { 
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#7c3aed',
+                        bodyColor: '#ffffff',
+                        borderColor: '#7c3aed',
+                        borderWidth: 1,
+                        cornerRadius: 6,
+                        callbacks: {
+                            title: function(context) {
+                                return 'RAM Kullanımı';
+                            },
+                            label: function(context) {
+                                return context.parsed.y.toFixed(1) + '%';
+                            }
+                        }
+                    }
                 },
                 scales: {
                     x: { display: false },
                     y: { display: false, min: 0, max: 100 }
                 },
                 elements: {
-                    line: { tension: 0.3 }
+                    line: { tension: 0.3 },
+                    point: {
+                        radius: 0,
+                        hoverRadius: 4,
+                        hitRadius: 8
+                    }
                 }
             }
         });
 
         // Dashboard güncelleme fonksiyonu
+        let lastUpdateTime = 0;
         function updateDashboard(data) {
-            console.log('Dashboard güncelleniyor:', data);
+            // Rate limiting - saniyede max 2 güncelleme
+            const now = Date.now();
+            if (now - lastUpdateTime < 500) return;
+            lastUpdateTime = now;
             
-            // Ana istatistikler
-            document.getElementById('serverCount').textContent = data.serverCount || 0;
-            document.getElementById('avgCpu').textContent = (data.avgCpu || 0) + '%';
-            document.getElementById('avgMem').textContent = (data.avgMem || 0) + '%';
-            document.getElementById('totalRequests').textContent = formatNumber(data.totalRequests || 0);
-            document.getElementById('dataReceived').textContent = (data.dataReceived || 0) + ' KB';
-            document.getElementById('dataSent').textContent = (data.dataSent || 0) + ' KB';
+            // Ana istatistikler - batch update
+            const elements = {
+                serverCount: data.serverCount || 0,
+                avgCpu: (data.avgCpu || 0) + '%',
+                avgMem: (data.avgMem || 0) + '%',
+                totalRequests: formatNumber(data.totalRequests || 0),
+                dataReceived: (data.dataReceived || 0) + ' KB',
+                dataSent: (data.dataSent || 0) + ' KB'
+            };
             
-            // Zaman etiketi
-            const now = new Date().toLocaleTimeString('tr-TR', { 
+            Object.entries(elements).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            });
+            
+            // Grafik verilerini güncelle
+            const now_time = new Date().toLocaleTimeString('tr-TR', { 
                 hour: '2-digit', 
                 minute: '2-digit', 
                 second: '2-digit' 
             });
-            timeLabels.push(now);
             
-            // Grafik verilerini güncelle
+            // Performans için maksimum 50 veri noktası tut
+            const maxDataPoints = 50;
+            
+            timeLabels.push(now_time);
             requestData.push(data.totalRequests || 0);
             cpuData.push(parseFloat(data.avgCpu) || 0);
             memData.push(parseFloat(data.avgMem) || 0);
             
-            // Performans için maksimum 200 veri noktası tut
-            const maxDataPoints = 200;
             if (timeLabels.length > maxDataPoints) {
                 timeLabels.shift();
                 requestData.shift();
@@ -866,10 +951,12 @@
                 memData.shift();
             }
             
-            // Grafikleri optimize edilmiş şekilde güncelle
-            requestChart.update('none');
-            cpuChart.update('none');
-            memChart.update('none');
+            // Grafikleri sadece her 3. güncellemede refresh et
+            if (timeLabels.length % 3 === 0) {
+                requestChart.update();
+                cpuChart.update();
+                memChart.update();
+            }
             
             // Sunucu listesini güncelle
             updateServerList(data.servers || []);
@@ -895,16 +982,21 @@
         }
         
         function updateServerList(servers) {
-            console.log('Sunucu listesi güncelleniyor:', servers);
             const serverList = document.getElementById('serverList');
-            serverList.innerHTML = '';
             
             if (!servers || servers.length === 0) {
                 serverList.innerHTML = '<div class="server-item">Sunucu bulunamadı</div>';
                 return;
             }
             
-            servers.forEach(server => {
+            // Virtual scrolling için sadece görünen sunucuları render et
+            const maxVisible = 10;
+            const visibleServers = servers.slice(0, maxVisible);
+            
+            // Document fragment kullanarak batch DOM update
+            const fragment = document.createDocumentFragment();
+            
+            visibleServers.forEach(server => {
                 const serverDiv = document.createElement('div');
                 serverDiv.className = 'server-item';
                 
@@ -931,8 +1023,22 @@
                     </div>
                 `;
                 
-                serverList.appendChild(serverDiv);
+                fragment.appendChild(serverDiv);
             });
+            
+            // Tek seferde DOM'u güncelle
+            serverList.innerHTML = '';
+            serverList.appendChild(fragment);
+            
+            // Fazla sunucu varsa göster
+            if (servers.length > maxVisible) {
+                const moreDiv = document.createElement('div');
+                moreDiv.className = 'server-item';
+                moreDiv.style.textAlign = 'center';
+                moreDiv.style.opacity = '0.7';
+                moreDiv.innerHTML = `... ve ${servers.length - maxVisible} sunucu daha`;
+                serverList.appendChild(moreDiv);
+            }
         }
 
         // Sayfa kapatılırken WebSocket'i temizle

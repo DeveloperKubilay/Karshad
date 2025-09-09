@@ -16,11 +16,11 @@
     "CpuReleaseUsage": {
         "min": 50,
         "prepare_threshold": 55,
-        "max": 95,
+        "max": 85,
         "MinVmDuration": 300000,
-        "CreateVmTimeout": 10000,
+        "CreateVmTimeout": 30000,
         "RoutingDelay": 30000,
-        "nextRemoveVmTimeout": 30000
+        "nextRemoveVmTimeout": 60000
     },
     "allowedIpaddrs": [
         {
@@ -32,7 +32,7 @@
             "url": "http://localbost"
         }
     ],
-    "domain": "http://{server}.tmaldergi.com",
+    "domain": "https://{server}.tmaldergi.com",
     "UnderAttack": {
         "thresholdIncrease": 4.0,
         "thresholdDecrease": 1.3,
@@ -44,6 +44,7 @@
         "cpuInfo": true,
         "vmInfo": true,
         "intervals": true,
+        "debug": false,
         "file": "loadbalancer.log"
     }
 }
